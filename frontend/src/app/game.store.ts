@@ -31,6 +31,9 @@ export const GameStore = signalStore(
     progress: computed(() => Math.min(100, ((game()?.player.score ?? 0) / TARGET_SCORE) * 100)),
   })),
   withMethods((store, api = inject(GameApiService)) => {
+    // Shared across all methods below: starting or loading a different game must also break any
+    // `runDecisionAutomation` loop still in flight for the previous game, since that loop only
+    // checks this flag between steps.
     let stopRequested = false;
     const execute = async (request: () => Observable<GameView>) => {
       patchState(store, { busy: true, error: null });

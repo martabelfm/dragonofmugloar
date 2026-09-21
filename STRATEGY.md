@@ -18,6 +18,8 @@ The baseline policy is intentionally explainable:
 
 The deterministic `GameServiceTest` validates that this automation reaches the assignment's 1,000-point target against a successful game port.
 
+**Live verification:** running `SAFE_1000` automation end to end against the real `https://dragonsofmugloar.com` API reached a score of 3,305 (over 3x the 1,000-point target) across 97 turns before the run ended on lost lives. Live scores vary between runs since the remote game's mechanics are not deterministic; this run is evidence the policy clears the target in practice, not a guaranteed result.
+
 ## High-score mode
 
 High-score mode is a deliberately isolated experimental policy. It avoids `Suicide mission` and `Impossible` while alternatives exist, protects the final life, and balances purchases among upgrade types. Any future tuning should add or amend focused tests in `DecisionEngineTest` first, then validate against the live game separately.

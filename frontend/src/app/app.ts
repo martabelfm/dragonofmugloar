@@ -3,6 +3,7 @@ import { Component, DestroyRef, computed, effect, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, startWith } from 'rxjs';
+import { ADVERTISEMENT_SAFETY_RANK } from './game.constants';
 import { Advertisement, StrategyMode } from './game.models';
 import { GameStore } from './game.store';
 
@@ -93,9 +94,9 @@ export class App {
   }
 
   protected riskClass(ad: Advertisement): string {
-    if (['Piece of cake', 'Walk in the park', 'Sure thing'].includes(ad.probability))
-      return 'risk safe';
-    if (['Quite likely', 'Hmmm....', 'Gamble'].includes(ad.probability)) return 'risk medium';
+    const rank = ADVERTISEMENT_SAFETY_RANK[ad.probability] ?? 0;
+    if (rank >= 9) return 'risk safe';
+    if (rank >= 6) return 'risk medium';
     return 'risk danger';
   }
 

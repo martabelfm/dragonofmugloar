@@ -78,12 +78,12 @@ public class MugloarClient implements GamePort {
     }
 
     private static <T> T requireBody(T body) {
-        if (body == null) throw new UpstreamGameException("Mugloar returned an empty response.", 502, null);
+        if (body == null) throw new UpstreamGameException("Mugloar returned an empty response.", null);
         return body;
     }
 
     private static UpstreamGameException translate(RestClientException exception) {
-        return new UpstreamGameException("The Mugloar service could not complete the request.", 502, exception);
+        return new UpstreamGameException("The Mugloar service could not complete the request.", exception);
     }
 
     private record StartResponse(String gameId, int lives, int gold, int level, int score, int highScore, int turn) {}
