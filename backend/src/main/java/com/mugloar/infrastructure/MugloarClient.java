@@ -1,8 +1,11 @@
 package com.mugloar.infrastructure;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.mugloar.application.GamePort;
 import com.mugloar.domain.*;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -18,7 +21,14 @@ public class MugloarClient implements GamePort {
         var httpClient = HttpClient.newBuilder().connectTimeout(properties.connectTimeout()).build();
         var requestFactory = new JdkClientHttpRequestFactory(httpClient);
         requestFactory.setReadTimeout(properties.readTimeout());
-        this.client = builder.baseUrl(properties.baseUrl()).requestFactory(requestFactory).build();
+        var mapper = new ObjectMapper()
+                .registerModule(new SimpleModule().addDeserializer(Advertisement.class, new AdvertisementDeserializer()));
+        this.client = builder.baseUrl(properties.baseUrl()).requestFactory(requestFactory)
+                .messageConverters(converters -> {
+                    converters.removeIf(MappingJackson2HttpMessageConverter.class::isInstance);
+                    converters.add(new MappingJackson2HttpMessageConverter(mapper));
+                })
+                .build();
     }
 
     @Override
@@ -30,9 +40,7 @@ public class MugloarClient implements GamePort {
 
     @Override
     public List<Advertisement> getAds(String gameId) {
-        return list(get("/api/v2/{gameId}/messages", Advertisement[].class, gameId)).stream()
-                .map(AdvertisementDecoder::decode)
-                .toList();
+        return list(get("/api/v2/{gameId}/messages", Advertisement[].class, gameId));
     }
 
     @Override

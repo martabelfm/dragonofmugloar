@@ -713,8 +713,14 @@ footer {
     min-height: 36px;
   }
   .page-shell > main {
+    display: flex;
+    flex-direction: column;
     min-height: 0;
     padding: 10px 0 12px;
+    overflow-y: auto;
+  }
+  .welcome {
+    margin: auto;
   }
   .dashboard-layout,
   .content-grid,

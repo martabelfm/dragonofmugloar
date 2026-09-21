@@ -20,4 +20,9 @@ final class GameSession {
     GameSession(PlayerState player) {
         this.player = player;
     }
+
+    /** Rejects any further mutating action once the dragon has run out of lives. */
+    void ensurePlayable() {
+        if (player.isFinished()) throw new IllegalStateException("The game has ended.");
+    }
 }

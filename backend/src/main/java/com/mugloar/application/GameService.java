@@ -49,9 +49,7 @@ public class GameService {
     }
 
     public GameView solve(String gameId, String adId) {
-        var session = repository.require(gameId);
-        synchronized (session) {
-            ensurePlayable(session);
+        return mutate(gameId, session -> {
             var ad = session.ads.stream().filter(value -> value.adId().equals(adId)).findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("Advertisement is not available."));
             var outcome = gamePort.solve(gameId, adId);
@@ -59,15 +57,11 @@ public class GameService {
                     outcome.score(), outcome.highScore(), outcome.turn());
             record(session, Decision.Action.SOLVE, adId, outcome.message(), outcome.success());
             session.consecutiveBoardRefreshes = 0;
-            refreshResources(session);
-            return view(session);
-        }
+        });
     }
 
     public GameView purchase(String gameId, String itemId) {
-        var session = repository.require(gameId);
-        synchronized (session) {
-            ensurePlayable(session);
+        return mutate(gameId, session -> {
             var item = session.shop.stream().filter(value -> value.id().equals(itemId)).findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("Shop item is not available."));
             if (session.player.gold() < item.cost()) {
@@ -80,29 +74,39 @@ public class GameService {
             record(session, HEALING_POTION_ID.equals(itemId) ? Decision.Action.HEAL : Decision.Action.PURCHASE, itemId,
                     outcome.success() ? "Purchased %s.".formatted(item.name()) : "Purchase failed.", outcome.success());
             session.consecutiveBoardRefreshes = 0;
-            refreshResources(session);
-            return view(session);
-        }
+        });
     }
 
     public GameView investigate(String gameId) {
-        var session = repository.require(gameId);
-        synchronized (session) {
-            ensurePlayable(session);
+        return mutate(gameId, session -> {
             session.reputation = gamePort.investigate(gameId);
             session.player = new PlayerState(gameId, session.player.lives(), session.player.gold(),
                     session.player.level(), session.player.score(), session.player.highScore(), session.player.turn() + 1);
             record(session, Decision.Action.INVESTIGATE, null, "Investigated reputation.", true);
             session.consecutiveBoardRefreshes++;
+        });
+    }
+
+    /** Runs a mutating action behind the shared session lock and invariant check, then refreshes the board. */
+    private GameView mutate(String gameId, GameMutation mutation) {
+        var session = repository.require(gameId);
+        synchronized (session) {
+            session.ensurePlayable();
+            mutation.apply(session);
             refreshResources(session);
             return view(session);
         }
     }
 
+    @FunctionalInterface
+    private interface GameMutation {
+        void apply(GameSession session);
+    }
+
     public GameView autoStep(String gameId) {
         var session = repository.require(gameId);
         synchronized (session) {
-            ensurePlayable(session);
+            session.ensurePlayable();
             return switch (session.recommendation.action()) {
                 case HEAL -> purchase(gameId, session.recommendation.targetId());
                 case PURCHASE -> purchase(gameId, session.recommendation.targetId());
@@ -144,10 +148,6 @@ public class GameService {
         if (session.shop.isEmpty()) {
             session.shop = List.copyOf(gamePort.getShop(session.player.gameId()));
         }
-    }
-
-    private void ensurePlayable(GameSession session) {
-        if (session.player.isFinished()) throw new IllegalStateException("The game has ended.");
     }
 
     private GameView view(GameSession session) {
