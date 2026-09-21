@@ -8,12 +8,12 @@ describe('advertisement ranking', () => {
       ad('safe', 10, 'Piece of cake'),
       ad('likely', 300, 'Quite likely'),
     ]);
-    expect(result.map(value => value.adId)).toEqual(['safe', 'likely', 'gamble']);
+    expect(result.map((value) => value.adId)).toEqual(['safe', 'likely', 'gamble']);
   });
 
   it('puts higher rewards first within the same tier', () => {
     const result = sortAds([ad('small', 10, 'Sure thing'), ad('large', 80, 'Sure thing')]);
-    expect(result.map(value => value.adId)).toEqual(['large', 'small']);
+    expect(result.map((value) => value.adId)).toEqual(['large', 'small']);
   });
 });
 

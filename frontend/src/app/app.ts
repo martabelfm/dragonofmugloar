@@ -21,7 +21,9 @@ export class App {
   private observedTurn = -1;
   private feedbackTimer: ReturnType<typeof setTimeout> | null = null;
 
-  protected readonly missionFeedback = signal<{ successful: boolean; message: string } | null>(null);
+  protected readonly missionFeedback = signal<{ successful: boolean; message: string } | null>(
+    null,
+  );
   protected readonly guidanceEnabled = signal(true);
   protected readonly guidanceMode = computed(() => this.store.game()?.strategyMode ?? 'SAFE_1000');
   protected readonly guidance = computed(() => {
@@ -29,19 +31,25 @@ export class App {
     if (!game || game.finished || !this.guidanceEnabled()) return null;
     const recommendation = game.recommendation;
     return {
-      type: recommendation.action === 'SOLVE' ? 'mission' :
-        recommendation.action === 'PURCHASE' || recommendation.action === 'HEAL' ? 'item' : 'none',
+      type:
+        recommendation.action === 'SOLVE'
+          ? 'mission'
+          : recommendation.action === 'PURCHASE' || recommendation.action === 'HEAL'
+            ? 'item'
+            : 'none',
       targetId: recommendation.targetId,
       label: recommendation.title,
     };
   });
 
   constructor() {
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd),
-      startWith(null),
-      takeUntilDestroyed(this.destroyRef),
-    ).subscribe(() => this.restoreRouteGame());
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        startWith(null),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => this.restoreRouteGame());
 
     effect(() => this.showLatestMissionFeedback());
     effect(() => this.scrollToMobileRecommendation());
@@ -85,7 +93,8 @@ export class App {
   }
 
   protected riskClass(ad: Advertisement): string {
-    if (['Piece of cake', 'Walk in the park', 'Sure thing'].includes(ad.probability)) return 'risk safe';
+    if (['Piece of cake', 'Walk in the park', 'Sure thing'].includes(ad.probability))
+      return 'risk safe';
     if (['Quite likely', 'Hmmm....', 'Gamble'].includes(ad.probability)) return 'risk medium';
     return 'risk danger';
   }
@@ -109,10 +118,12 @@ export class App {
 
   private scrollToMobileRecommendation(): void {
     const game = this.store.game();
-    if (!this.guidanceEnabled() || !game || game.finished || game.recommendation.action === 'STOP') return;
+    if (!this.guidanceEnabled() || !game || game.finished || game.recommendation.action === 'STOP')
+      return;
     setTimeout(() => {
       if (!window.matchMedia('(max-width: 900px)').matches || !this.guidanceEnabled()) return;
-      document.querySelector<HTMLElement>('.recommended, .investigate-recommended')
+      document
+        .querySelector<HTMLElement>('.recommended, .investigate-recommended')
         ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
   }

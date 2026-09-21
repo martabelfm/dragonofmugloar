@@ -1,6 +1,11 @@
 package com.mugloar.application;
 
-import com.mugloar.domain.*;
+import com.mugloar.domain.Advertisement;
+import com.mugloar.domain.Decision;
+import com.mugloar.domain.PlayerState;
+import com.mugloar.domain.ShopItem;
+import com.mugloar.domain.StrategyMode;
+import com.mugloar.domain.TurnRecord;
 import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
@@ -8,6 +13,8 @@ import java.util.List;
 @Service
 public class GameService {
     public static final int TARGET_SCORE = 1_000;
+    private static final String HEALING_POTION_ID = "hpot";
+    private static final int HISTORY_LIMIT = 1_000;
     private final GamePort gamePort;
     private final GameSessionRepository repository;
     private final DecisionEngine decisionEngine;
@@ -70,7 +77,7 @@ public class GameService {
             session.player = new PlayerState(gameId, outcome.lives(), outcome.gold(), outcome.level(),
                     session.player.score(), session.player.highScore(), outcome.turn());
             if (outcome.success()) session.purchasedItems.merge(itemId, 1, Integer::sum);
-            record(session, "hpot".equals(itemId) ? Decision.Action.HEAL : Decision.Action.PURCHASE, itemId,
+            record(session, HEALING_POTION_ID.equals(itemId) ? Decision.Action.HEAL : Decision.Action.PURCHASE, itemId,
                     outcome.success() ? "Purchased %s.".formatted(item.name()) : "Purchase failed.", outcome.success());
             session.consecutiveBoardRefreshes = 0;
             refreshResources(session);
@@ -128,7 +135,7 @@ public class GameService {
     }
 
     private void record(GameSession session, Decision.Action action, String targetId, String description, boolean success) {
-        if (session.history.size() >= 1_000) session.history.removeFirst();
+        if (session.history.size() >= HISTORY_LIMIT) session.history.removeFirst();
         session.history.add(new TurnRecord(session.player.turn(), action, targetId, description, success,
                 session.player.score(), session.player.gold(), session.player.lives(), Instant.now()));
     }

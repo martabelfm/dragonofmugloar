@@ -17,8 +17,16 @@ export interface Advertisement {
   probability: string;
 }
 
-export interface ShopItem { id: string; name: string; cost: number; }
-export interface Reputation { people: number; state: number; underworld: number; }
+export interface ShopItem {
+  id: string;
+  name: string;
+  cost: number;
+}
+export interface Reputation {
+  people: number;
+  state: number;
+  underworld: number;
+}
 export type StrategyMode = 'SAFE_1000' | 'HIGH_SCORE';
 export type DecisionAction = 'SOLVE' | 'HEAL' | 'PURCHASE' | 'INVESTIGATE' | 'STOP';
 
@@ -33,7 +41,7 @@ export interface Decision {
 export interface TurnRecord {
   turn: number;
   action: DecisionAction;
-  targetId: string;
+  targetId: string | null;
   description: string;
   successful: boolean;
   score: number;

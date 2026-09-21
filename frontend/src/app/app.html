@@ -1,68 +1,295 @@
 <div class="page-shell">
   <header class="hero">
     <div class="brand-mark" aria-hidden="true">M</div>
-    <div><p class="eyebrow">Royal Dragon Trainer's Guild</p><h1>Mugloar Mission Control</h1></div>
+    <div>
+      <p class="eyebrow">Royal Dragon Trainer's Guild</p>
+      <h1>Mugloar Mission Control</h1>
+    </div>
     @if (store.player(); as headerPlayer) {
       <div class="header-stats" aria-label="Game status">
-        <span><small>Score</small><strong>{{ headerPlayer.score | number }}</strong></span>
-        <span><small>Gold</small><strong>{{ headerPlayer.gold | number }}</strong></span>
-        <span><small>Lives</small><strong>{{ headerPlayer.lives }}</strong></span>
-        <span><small>Level</small><strong>{{ headerPlayer.level }}</strong><em>T{{ headerPlayer.turn }}</em></span>
+        <span
+          ><small>Score</small><strong>{{ headerPlayer.score | number }}</strong></span
+        >
+        <span
+          ><small>Gold</small><strong>{{ headerPlayer.gold | number }}</strong></span
+        >
+        <span
+          ><small>Lives</small><strong>{{ headerPlayer.lives }}</strong></span
+        >
+        <span
+          ><small>Level</small><strong>{{ headerPlayer.level }}</strong
+          ><em>T{{ headerPlayer.turn }}</em></span
+        >
       </div>
     }
-    <button class="button primary new-game" [disabled]="store.busy() || store.automationRunning()" (click)="startGame()">{{ store.player() ? 'New game' : 'Begin adventure' }}</button>
+    <button
+      class="button primary new-game"
+      [disabled]="store.busy() || store.automationRunning()"
+      (click)="startGame()"
+    >
+      {{ store.player() ? 'New game' : 'Begin adventure' }}
+    </button>
   </header>
   <main>
-    @if (store.error(); as error) { <section class="alert" role="alert"><span>{{ error }}</span><button aria-label="Dismiss error" (click)="store.dismissError()">x</button></section> }
+    @if (store.error(); as error) {
+      <section class="alert" role="alert">
+        <span>{{ error }}</span
+        ><button aria-label="Dismiss error" (click)="store.dismissError()">x</button>
+      </section>
+    }
     @if (!store.player()) {
-      <section class="welcome card"><div class="dragon-sigil" aria-hidden="true">M</div><p class="eyebrow">Your dragon awaits</p><h2>Build a reputation worth singing about</h2><p>Choose missions yourself or let the guild's strategy guide your dragon beyond 1,000 points.</p><button class="button primary" [disabled]="store.busy()" (click)="startGame()">{{ store.busy() ? 'Preparing the den...' : 'Start a new game' }}</button></section>
+      <section class="welcome card">
+        <div class="dragon-sigil" aria-hidden="true">M</div>
+        <p class="eyebrow">Your dragon awaits</p>
+        <h2>Build a reputation worth singing about</h2>
+        <p>
+          Choose missions yourself or let the guild's strategy guide your dragon beyond 1,000
+          points.
+        </p>
+        <button class="button primary" [disabled]="store.busy()" (click)="startGame()">
+          {{ store.busy() ? 'Preparing the den...' : 'Start a new game' }}
+        </button>
+      </section>
     } @else {
       @let player = store.player()!;
       @let game = store.game()!;
       <div class="dashboard-layout">
         <aside class="action-rail card">
-          <div class="guidance-picker"><span>Manual guidance</span><div><button [class.active]="!guidanceEnabled()" [disabled]="store.busy()" (click)="disableGuidance()">Off</button><button [class.active]="guidanceEnabled() && guidanceMode() === 'SAFE_1000'" [disabled]="store.busy() || store.automationRunning()" (click)="selectGuidanceMode('SAFE_1000')">Safe 1,000</button><button [class.active]="guidanceEnabled() && guidanceMode() === 'HIGH_SCORE'" [disabled]="store.busy() || store.automationRunning()" (click)="selectGuidanceMode('HIGH_SCORE')">High score</button></div>@if (guidance(); as nextGuidance) { <small>{{ nextGuidance.label }}</small> }</div>
-          <div class="rail-progress"><span>Goal progress</span><strong>{{ store.progress() | number:'1.0-0' }}%</strong><div class="progress-track"><span [style.width.%]="store.progress()"></span></div></div>
-          <div class="automation-actions">@if (store.automationRunning()) { <button class="button danger-button" (click)="store.stopAutomation()">Stop automation</button> } @else if (guidanceEnabled()) { <button class="button primary" [disabled]="store.busy() || game.finished || game.recommendation.action === 'STOP'" (click)="runSelectedStrategy()">Run strategy</button> }<button class="button ghost" [disabled]="store.busy() || store.automationRunning()" (click)="store.refresh()">Refresh board</button><button class="button ghost" (click)="openChronicle(chronicleDialog)">Chronicles</button></div>
-          <div class="rail-intelligence"><span>Reputation</span>@if (game.reputation; as reputation) { <div><small>People <b>{{ reputation.people | number:'1.0-1' }}</b></small><small>State <b>{{ reputation.state | number:'1.0-1' }}</b></small><small>Underworld <b>{{ reputation.underworld | number:'1.0-1' }}</b></small></div> } @else { <small>Not investigated</small> }<button class="button ghost" [class.investigate-recommended]="guidanceEnabled() && game.recommendation.action === 'INVESTIGATE'" [disabled]="store.busy() || store.automationRunning() || game.finished" (click)="store.investigate()">Investigate</button></div>
-        </aside>
-        <div class="content-grid">
-        <section class="missions">
-          <div class="section-heading"><div><p class="eyebrow">Message board</p><h2>Available missions</h2></div><div class="heading-actions"><span>{{ store.ads().length }} notices</span></div></div>
-          <div class="mission-list">
-            @for (ad of store.ads(); track ad.adId) {
-              <article class="mission card" [class.recommended]="isGuided('mission', ad.adId)">
-                <div class="mission-labels"><span class="risk" [class]="riskClass(ad)">{{ ad.probability }}</span></div>
-                <p class="mission-message" [title]="ad.message">{{ ad.message }}</p>
-                <span class="expires" [class.urgent]="ad.expiresIn <= 2">{{ ad.expiresIn }}t</span>
-                <strong class="mission-reward">{{ ad.reward }}g</strong>
-                <button class="button compact" [disabled]="store.busy() || store.automationRunning() || game.finished" (click)="store.solve(ad.adId)">Accept</button>
-              </article>
-            } @empty {
-              @if (game.finished) {
-                <section class="game-over card">
-                  <div class="game-over-mark" aria-hidden="true">0</div>
-                  <div class="game-over-copy"><p class="eyebrow">The dragon has fallen</p><h2>Game over</h2><p>All lives are lost. Your final run has been recorded in the chronicles.</p></div>
-                  <dl class="final-stats"><div><dt>Score</dt><dd>{{ player.score | number }}</dd></div><div><dt>Gold</dt><dd>{{ player.gold | number }}</dd></div><div><dt>Level</dt><dd>{{ player.level | number }}</dd></div><div><dt>Turns</dt><dd>{{ player.turn | number }}</dd></div></dl>
-                  <button class="button primary" [disabled]="store.busy()" (click)="startGame()">Start a new game</button>
-                </section>
-              } @else {
-                <div class="empty card">No missions are currently available.</div>
-              }
+          <div class="guidance-picker">
+            <span>Manual guidance</span>
+            <div>
+              <button
+                [class.active]="!guidanceEnabled()"
+                [disabled]="store.busy()"
+                (click)="disableGuidance()"
+              >
+                Off</button
+              ><button
+                [class.active]="guidanceEnabled() && guidanceMode() === 'SAFE_1000'"
+                [disabled]="store.busy() || store.automationRunning()"
+                (click)="selectGuidanceMode('SAFE_1000')"
+              >
+                Safe 1,000</button
+              ><button
+                [class.active]="guidanceEnabled() && guidanceMode() === 'HIGH_SCORE'"
+                [disabled]="store.busy() || store.automationRunning()"
+                (click)="selectGuidanceMode('HIGH_SCORE')"
+              >
+                High score
+              </button>
+            </div>
+            @if (guidance(); as nextGuidance) {
+              <small>{{ nextGuidance.label }}</small>
             }
           </div>
-        </section>
-        <aside>
-          <section class="card side-card">
-            <div class="section-heading"><div><p class="eyebrow">Quartermaster</p><h2>Dragon shop</h2></div><span>{{ player.gold | number }} gold</span></div>
-            <div class="shop-list compact-shop">@for (item of store.shop(); track item.id) { <div class="shop-item" [class.recommended]="isGuided('item', item.id)"><div><strong>{{ item.name }}</strong><span>{{ item.cost }} gold @if (game.purchasedItems[item.id]) { · bought {{ game.purchasedItems[item.id] }} }</span></div><button class="icon-button" [attr.aria-label]="'Buy ' + item.name" [disabled]="store.busy() || store.automationRunning() || player.gold < item.cost || game.finished" (click)="store.purchase(item.id)">+</button></div> }</div>
-          </section>
+          <div class="rail-progress">
+            <span>Goal progress</span><strong>{{ store.progress() | number: '1.0-0' }}%</strong>
+            <div class="progress-track"><span [style.width.%]="store.progress()"></span></div>
+          </div>
+          <div class="automation-actions">
+            @if (store.automationRunning()) {
+              <button class="button danger-button" (click)="store.stopAutomation()">
+                Stop automation
+              </button>
+            } @else if (guidanceEnabled()) {
+              <button
+                class="button primary"
+                [disabled]="store.busy() || game.finished || game.recommendation.action === 'STOP'"
+                (click)="runSelectedStrategy()"
+              >
+                Run strategy
+              </button>
+            }
+            <button
+              class="button ghost"
+              [disabled]="store.busy() || store.automationRunning()"
+              (click)="store.refresh()"
+            >
+              Refresh board</button
+            ><button class="button ghost" (click)="openChronicle(chronicleDialog)">
+              Chronicles
+            </button>
+          </div>
+          <div class="rail-intelligence">
+            <span>Reputation</span>
+            @if (game.reputation; as reputation) {
+              <div>
+                <small
+                  >People <b>{{ reputation.people | number: '1.0-1' }}</b></small
+                ><small
+                  >State <b>{{ reputation.state | number: '1.0-1' }}</b></small
+                ><small
+                  >Underworld <b>{{ reputation.underworld | number: '1.0-1' }}</b></small
+                >
+              </div>
+            } @else {
+              <small>Not investigated</small>
+            }
+            <button
+              class="button ghost"
+              [class.investigate-recommended]="
+                guidanceEnabled() && game.recommendation.action === 'INVESTIGATE'
+              "
+              [disabled]="store.busy() || store.automationRunning() || game.finished"
+              (click)="store.investigate()"
+            >
+              Investigate
+            </button>
+          </div>
         </aside>
+        <div class="content-grid">
+          <section class="missions">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Message board</p>
+                <h2>Available missions</h2>
+              </div>
+              <div class="heading-actions">
+                <span>{{ store.ads().length }} notices</span>
+              </div>
+            </div>
+            <div class="mission-list">
+              @for (ad of store.ads(); track ad.adId) {
+                <article class="mission card" [class.recommended]="isGuided('mission', ad.adId)">
+                  <div class="mission-labels">
+                    <span class="risk" [class]="riskClass(ad)">{{ ad.probability }}</span>
+                  </div>
+                  <p class="mission-message" [title]="ad.message">{{ ad.message }}</p>
+                  <span class="expires" [class.urgent]="ad.expiresIn <= 2"
+                    >{{ ad.expiresIn }}t</span
+                  >
+                  <strong class="mission-reward">{{ ad.reward }}g</strong>
+                  <button
+                    class="button compact"
+                    [disabled]="store.busy() || store.automationRunning() || game.finished"
+                    (click)="store.solve(ad.adId)"
+                  >
+                    Accept
+                  </button>
+                </article>
+              } @empty {
+                @if (game.finished) {
+                  <section class="game-over card">
+                    <div class="game-over-mark" aria-hidden="true">0</div>
+                    <div class="game-over-copy">
+                      <p class="eyebrow">The dragon has fallen</p>
+                      <h2>Game over</h2>
+                      <p>All lives are lost. Your final run has been recorded in the chronicles.</p>
+                    </div>
+                    <dl class="final-stats">
+                      <div>
+                        <dt>Score</dt>
+                        <dd>{{ player.score | number }}</dd>
+                      </div>
+                      <div>
+                        <dt>Gold</dt>
+                        <dd>{{ player.gold | number }}</dd>
+                      </div>
+                      <div>
+                        <dt>Level</dt>
+                        <dd>{{ player.level | number }}</dd>
+                      </div>
+                      <div>
+                        <dt>Turns</dt>
+                        <dd>{{ player.turn | number }}</dd>
+                      </div>
+                    </dl>
+                    <button class="button primary" [disabled]="store.busy()" (click)="startGame()">
+                      Start a new game
+                    </button>
+                  </section>
+                } @else {
+                  <div class="empty card">No missions are currently available.</div>
+                }
+              }
+            </div>
+          </section>
+          <aside>
+            <section class="card side-card">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">Quartermaster</p>
+                  <h2>Dragon shop</h2>
+                </div>
+                <span>{{ player.gold | number }} gold</span>
+              </div>
+              <div class="shop-list compact-shop">
+                @for (item of store.shop(); track item.id) {
+                  <div class="shop-item" [class.recommended]="isGuided('item', item.id)">
+                    <div>
+                      <strong>{{ item.name }}</strong
+                      ><span
+                        >{{ item.cost }} gold
+                        @if (game.purchasedItems[item.id]) {
+                          · bought {{ game.purchasedItems[item.id] }}
+                        }
+                      </span>
+                    </div>
+                    <button
+                      class="icon-button"
+                      [attr.aria-label]="'Buy ' + item.name"
+                      [disabled]="
+                        store.busy() ||
+                        store.automationRunning() ||
+                        player.gold < item.cost ||
+                        game.finished
+                      "
+                      (click)="store.purchase(item.id)"
+                    >
+                      +
+                    </button>
+                  </div>
+                }
+              </div>
+            </section>
+          </aside>
         </div>
       </div>
-      @if (missionFeedback(); as feedback) { <div class="mission-feedback" [class.success]="feedback.successful" [class.failure]="!feedback.successful" role="status"><span>{{ feedback.successful ? '✓' : '×' }}</span><strong>{{ feedback.successful ? 'Mission complete' : 'Mission failed' }}</strong><small>{{ feedback.message }}</small></div> }
-      <dialog #chronicleDialog class="chronicle-dialog" (click)="closeOnBackdrop($event, chronicleDialog)">
-        <section class="modal-card card"><div class="section-heading"><div><p class="eyebrow">Chronicle</p><h2>Recent turns</h2></div><button class="modal-close" aria-label="Close chronicles" (click)="chronicleDialog.close()">x</button></div><ol class="history">@for (turn of store.history(); track turn.turn) { <li><span [class.success]="turn.successful" [class.failure]="!turn.successful"></span><div><strong>Turn {{ turn.turn }} - {{ turn.action }}</strong><small>{{ turn.description }}</small></div></li> } @empty { <li class="muted">Your story begins with the first mission.</li> }</ol></section>
+      @if (missionFeedback(); as feedback) {
+        <div
+          class="mission-feedback"
+          [class.success]="feedback.successful"
+          [class.failure]="!feedback.successful"
+          role="status"
+        >
+          <span>{{ feedback.successful ? '✓' : '×' }}</span
+          ><strong>{{ feedback.successful ? 'Mission complete' : 'Mission failed' }}</strong
+          ><small>{{ feedback.message }}</small>
+        </div>
+      }
+      <dialog
+        #chronicleDialog
+        class="chronicle-dialog"
+        (click)="closeOnBackdrop($event, chronicleDialog)"
+      >
+        <section class="modal-card card">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Chronicle</p>
+              <h2>Recent turns</h2>
+            </div>
+            <button
+              class="modal-close"
+              aria-label="Close chronicles"
+              (click)="chronicleDialog.close()"
+            >
+              x
+            </button>
+          </div>
+          <ol class="history">
+            @for (turn of store.history(); track turn.turn) {
+              <li>
+                <span [class.success]="turn.successful" [class.failure]="!turn.successful"></span>
+                <div>
+                  <strong>Turn {{ turn.turn }} - {{ turn.action }}</strong
+                  ><small>{{ turn.description }}</small>
+                </div>
+              </li>
+            } @empty {
+              <li class="muted">Your story begins with the first mission.</li>
+            }
+          </ol>
+        </section>
       </dialog>
     }
   </main>

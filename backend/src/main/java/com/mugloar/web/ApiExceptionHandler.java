@@ -5,6 +5,7 @@ import com.mugloar.infrastructure.UpstreamGameException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -18,6 +19,11 @@ public class ApiExceptionHandler {
     @ExceptionHandler({IllegalArgumentException.class, ConstraintViolationException.class})
     ProblemDetail invalid(RuntimeException exception) {
         return problem(HttpStatus.BAD_REQUEST, "Invalid request", exception.getMessage());
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ProblemDetail unreadableRequest(HttpMessageNotReadableException exception) {
+        return problem(HttpStatus.BAD_REQUEST, "Invalid request", "The request body is invalid.");
     }
 
     @ExceptionHandler(IllegalStateException.class)
