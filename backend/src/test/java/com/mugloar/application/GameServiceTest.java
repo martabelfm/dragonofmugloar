@@ -18,6 +18,7 @@ class GameServiceTest {
     void automatedStepsReachTheRequiredScoreAndRecordEveryAction() {
         var service = service(new SuccessfulGamePort());
         var game = service.start();
+        game = service.updateStrategyMode(game.player().gameId(), StrategyMode.CONSERVATIVE);
 
         while (game.player().score() < GameService.TARGET_SCORE) {
             game = service.autoStep(game.player().gameId());
@@ -45,10 +46,12 @@ class GameServiceTest {
         var service = service(new SuccessfulGamePort());
         var game = service.start();
 
-        var updated = service.updateStrategyMode(game.player().gameId(), StrategyMode.HIGH_SCORE);
+        assertThat(game.strategyMode()).isEqualTo(StrategyMode.OFF);
 
-        assertThat(updated.strategyMode()).isEqualTo(StrategyMode.HIGH_SCORE);
-        assertThat(service.get(game.player().gameId()).strategyMode()).isEqualTo(StrategyMode.HIGH_SCORE);
+        var updated = service.updateStrategyMode(game.player().gameId(), StrategyMode.HIGH_RISK);
+
+        assertThat(updated.strategyMode()).isEqualTo(StrategyMode.HIGH_RISK);
+        assertThat(service.get(game.player().gameId()).strategyMode()).isEqualTo(StrategyMode.HIGH_RISK);
     }
 
     @Test
@@ -87,6 +90,10 @@ class GameServiceTest {
         @Override public List<ShopItem> getShop(String gameId) {
             return List.of(
                     new ShopItem("hpot", "Healing potion", 50),
+                    new ShopItem("cs", "Claw Sharpening", 100),
+                    new ShopItem("gas", "Gasoline", 100),
+                    new ShopItem("wax", "Copper Plating", 100),
+                    new ShopItem("tricks", "Book of Tricks", 100),
                     new ShopItem("wingpot", "Potion of Stronger Wings", 100));
         }
 

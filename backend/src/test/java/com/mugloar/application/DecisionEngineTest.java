@@ -44,9 +44,19 @@ class DecisionEngineTest {
     void safeModeFallsBackToTheLeastDangerousMissionAfterThreeRefreshes() {
         var decision = engine.decide(player(3, 0), List.of(
                 ad("impossible", 500, "Impossible"), ad("risky", 10, "Risky")),
-                StrategyMode.SAFE_1000, Map.of(), 3);
+                StrategyMode.CONSERVATIVE, Map.of(), 3);
 
         assertThat(decision.targetId()).isEqualTo("risky");
+    }
+
+    @Test
+    void safeModeUpgradesTheLeastPurchasedStarterSkill() {
+        var purchases = Map.of("cs", 3, "gas", 2, "wax", 0, "tricks", 1, "wingpot", 4);
+        var decision = engine.decide(player(3, 100), List.of(ad("safe", 100, "Sure thing")),
+                StrategyMode.CONSERVATIVE, purchases, 0);
+
+        assertThat(decision).extracting(Decision::action, Decision::targetId)
+                .containsExactly(Decision.Action.PURCHASE, "wax");
     }
 
     @Test
@@ -54,7 +64,7 @@ class DecisionEngineTest {
         var decision = engine.decide(player(3, 0), List.of(
                 ad("impossible", 10_000, "Impossible"),
                 ad("suicide", 9_000, "Suicide mission"), ad("gamble", 20, "Gamble")),
-                StrategyMode.HIGH_SCORE, Map.of(), 0);
+                StrategyMode.HIGH_RISK, Map.of(), 0);
 
         assertThat(decision.targetId()).isEqualTo("gamble");
     }
@@ -63,7 +73,7 @@ class DecisionEngineTest {
     void highScoreModeUsesTheSafestMissionAtOneLifeWhenHealingIsUnaffordable() {
         var decision = engine.decide(player(1, 40), List.of(
                 ad("valuable", 2_000, "Risky"), ad("safe-small", 20, "Sure thing"),
-                ad("safe-large", 80, "Sure thing")), StrategyMode.HIGH_SCORE, Map.of(), 0);
+                ad("safe-large", 80, "Sure thing")), StrategyMode.HIGH_RISK, Map.of(), 0);
 
         assertThat(decision.targetId()).isEqualTo("safe-large");
     }
@@ -72,7 +82,7 @@ class DecisionEngineTest {
     void highScoreModeBalancesPremiumUpgrades() {
         var purchases = Map.of("ch", 2, "rf", 1, "iron", 0, "mtrix", 3, "wingpotmax", 1);
         var decision = engine.decide(player(3, 350), List.of(ad("sure", 500, "Sure thing")),
-                StrategyMode.HIGH_SCORE, purchases, 0);
+                StrategyMode.HIGH_RISK, purchases, 0);
 
         assertThat(decision).extracting(Decision::action, Decision::targetId)
                 .containsExactly(Decision.Action.PURCHASE, "iron");

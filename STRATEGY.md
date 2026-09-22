@@ -6,23 +6,51 @@ This file documents the current policy boundary, not a promise of a particular l
 
 `backend/src/main/java/com/mugloar/application/DecisionEngine.java` is the only place that chooses a recommended action. The Angular client renders its recommendation and `POST /api/games/{gameId}/auto/step` executes that same action. This prevents manual guidance and automation from drifting apart.
 
-## Safe 1000 mode
+## Conservative mode
 
-The baseline policy is intentionally explainable:
+The baseline policy is intentionally explainable. It evaluates actions in this exact priority order:
 
-1. Restore the three-life buffer when an affordable healing potion is available.
-2. Spend available gold on the repeatable level upgrade.
-3. Prefer `Quite likely` or safer advertisements, ordered by safety, reward, and expiry.
-4. Refresh the board up to three times when no accepted ad exists.
-5. Use the least-dangerous remaining ad only after that bounded refresh limit.
+1. If the dragon has fewer than three lives and at least 50 gold, buy a healing potion (`hpot`).
+2. If at least 100 gold remains, buy the least-purchased starter upgrade from `cs`, `gas`, `wax`, `tricks`, and `wingpot`. This distributes upgrades evenly.
+3. Otherwise, consider missions rated `Quite likely` or safer. Choose by safety first, then reward, then the sooner expiry.
+4. If no accepted mission exists, investigate (refresh) the board up to three consecutive times without risking a life.
+5. Once that refresh limit is reached, take the safest mission left on the board. Stop only when no advertisement exists.
+
+The utility values establish the same priority for display and diagnostics: healing is 10,000, an upgrade is 9,000, and investigation is 1,000. A mission's utility is its safety rank multiplied by 1,000, plus reward multiplied by 10, with a small penalty when it is close to expiring.
 
 The deterministic `GameServiceTest` validates that this automation reaches the assignment's 1,000-point target against a successful game port.
 
-**Live verification:** running `SAFE_1000` automation end to end against the real `https://dragonsofmugloar.com` API reached a score of 3,305 (over 3x the 1,000-point target) across 97 turns before the run ended on lost lives. Live scores vary between runs since the remote game's mechanics are not deterministic; this run is evidence the policy clears the target in practice, not a guaranteed result.
+**Live verification:** running `CONSERVATIVE` automation end to end against the real `https://dragonsofmugloar.com` API reached a score of 3,305 (over 3x the 1,000-point target) across 97 turns before the run ended on lost lives. Live scores vary between runs since the remote game's mechanics are not deterministic; this run is evidence the policy clears the target in practice, not a guaranteed result.
 
-## High-score mode
+## High-risk mode
 
-High-score mode is a deliberately isolated experimental policy. It avoids `Suicide mission` and `Impossible` while alternatives exist, protects the final life, and balances purchases among upgrade types. Any future tuning should add or amend focused tests in `DecisionEngineTest` first, then validate against the live game separately.
+High-risk mode is a deliberately isolated experimental policy. It evaluates actions in this exact priority order:
+
+1. With one life and at least 50 gold, buy a healing potion.
+2. With two lives and at least 150 gold, buy the least-purchased starter upgrade while reserving 50 gold for emergency healing.
+3. With at least 350 gold, buy the least-purchased premium upgrade from `ch`, `rf`, `iron`, `mtrix`, and `wingpotmax`, again retaining the 50-gold healing reserve.
+4. Exclude `Suicide mission`, `Impossible`, and unknown risks while any other mission exists.
+5. With one life, choose the safest non-terminal mission. With more lives, select the non-terminal mission with the highest calculated utility.
+6. If only terminal-risk missions remain, choose the safest of them as a last resort. If the board is empty, investigate.
+
+Mission utility changes with the run. Before turn 15, safety and normalized reward each receive equal weight. From turn 15 onward, safety receives more weight and reward less; missions below 300 reward also use the lower difficulty weight. Equal utility is resolved in favor of the mission expiring sooner.
+
+Any future tuning should add or amend focused tests in `DecisionEngineTest` first, then validate against the live game separately.
+
+## Cooperation with the UI
+
+The UI does not duplicate either strategy. Every backend `GameView` contains the selected `strategyMode` and one current `recommendation` produced by `DecisionEngine` from player state, advertisements, purchase counts, and consecutive board refreshes.
+
+The API values are `OFF`, `CONSERVATIVE`, and `HIGH_RISK`. The backend session is the source of truth, so the selected strategy is restored with the rest of the game when `/games/{gameId}` is reloaded. New games start with `OFF`.
+
+- Guidance is **Off** by default for every new game. Off removes visual guidance and stops a running automation loop. It does not change the backend's saved strategy mode; the player can still solve missions, buy items, or investigate directly.
+- **Conservative** and **High risk** enable guidance and send the selected mode to `PUT /api/games/{gameId}/strategy-mode`. The backend immediately recalculates the recommendation.
+- The UI highlights the recommended mission or shop item with `NEXT`. An investigation recommendation highlights the Investigate button. The UI uses the backend target identifier; it does not recalculate which action is best.
+- **Run strategy** repeatedly calls `POST /api/games/{gameId}/auto/step`. For each call, `GameService` executes exactly the action in the current backend recommendation (`HEAL`, `PURCHASE`, `INVESTIGATE`, or `SOLVE`) and returns a fresh `GameView`. The Angular store waits for that response before requesting the next step.
+- **Stop automation** sets a client-side stop flag. The loop stops between requests, so an already-sent turn is allowed to finish safely.
+- Automation also stops on a failed request, a finished game, or a `STOP` recommendation. Each completed action is preserved in the chronicle, and mission results produce the short success/failure notification in the UI.
+
+This arrangement makes guidance and automation two presentations of the same server-side decision. Selecting a strategy changes policy; selecting Off changes only how the player interacts with it.
 
 ## Safe experimentation rules
 

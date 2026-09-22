@@ -6,9 +6,10 @@ import { filter, startWith } from 'rxjs';
 import { ADVERTISEMENT_SAFETY_RANK } from './game.constants';
 import { Advertisement, StrategyMode } from './game.models';
 import { GameStore } from './game.store';
+import { translate, TranslatePipe } from './translate.pipe';
 
 @Component({
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, TranslatePipe],
   selector: 'app-root',
   styleUrl: './app.scss',
   templateUrl: './app.html',
@@ -25,8 +26,9 @@ export class App {
   protected readonly missionFeedback = signal<{ successful: boolean; message: string } | null>(
     null,
   );
-  protected readonly guidanceEnabled = signal(true);
-  protected readonly guidanceMode = computed(() => this.store.game()?.strategyMode ?? 'SAFE_1000');
+  protected readonly guidanceEnabled = computed(() => this.guidanceMode() !== 'OFF');
+  protected readonly strategySelected = signal(false);
+  protected readonly guidanceMode = computed(() => this.store.game()?.strategyMode ?? 'OFF');
   protected readonly guidance = computed(() => {
     const game = this.store.game();
     if (!game || game.finished || !this.guidanceEnabled()) return null;
@@ -61,6 +63,7 @@ export class App {
   }
 
   protected async startGame(): Promise<void> {
+    this.disableGuidance();
     const game = await this.store.start();
     if (game) await this.router.navigate(['/games', game.player.gameId]);
   }
@@ -69,18 +72,54 @@ export class App {
     void this.store.runDecisionAutomation();
   }
 
-  protected selectGuidanceMode(mode: StrategyMode): void {
-    this.guidanceEnabled.set(true);
-    if (mode !== this.guidanceMode()) void this.store.updateStrategyMode(mode);
+  protected async selectGuidanceMode(mode: StrategyMode): Promise<void> {
+    const game =
+      mode === this.guidanceMode() ? this.store.game() : await this.store.updateStrategyMode(mode);
+    if (game) this.strategySelected.set(true);
   }
 
   protected disableGuidance(): void {
     this.store.stopAutomation();
-    this.guidanceEnabled.set(false);
+    this.strategySelected.set(false);
+    void this.store.updateStrategyMode('OFF');
   }
 
   protected openChronicle(dialog: HTMLDialogElement): void {
     dialog.showModal();
+  }
+
+  protected openGuidance(dialog: HTMLDialogElement): void {
+    this.strategySelected.set(false);
+    dialog.showModal();
+  }
+
+  protected runAutomationFromDialog(dialog: HTMLDialogElement): void {
+    dialog.close();
+    this.runSelectedStrategy();
+  }
+
+  protected openNewGameConfirmation(dialog: HTMLDialogElement): void {
+    dialog.showModal();
+  }
+
+  protected confirmNewGame(dialog: HTMLDialogElement): void {
+    dialog.close();
+    void this.startGame();
+  }
+
+  protected guidanceButtonLabel(): string {
+    if (!this.guidanceEnabled()) return translate('off');
+    return this.guidanceMode() === 'HIGH_RISK'
+      ? translate('highRisk')
+      : translate('conservative');
+  }
+
+  protected scrollToSection(sectionId: 'controls' | 'missions' | 'shop'): void {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  protected scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   protected closeOnBackdrop(event: MouseEvent, dialog: HTMLDialogElement): void {

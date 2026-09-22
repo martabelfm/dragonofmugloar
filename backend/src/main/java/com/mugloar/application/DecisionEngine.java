@@ -1,8 +1,8 @@
 package com.mugloar.application;
 
 import com.mugloar.application.strategy.GameStrategy;
-import com.mugloar.application.strategy.HighScoreStrategy;
-import com.mugloar.application.strategy.SafeStrategy;
+import com.mugloar.application.strategy.HighRiskStrategy;
+import com.mugloar.application.strategy.ConservativeStrategy;
 import com.mugloar.domain.Advertisement;
 import com.mugloar.domain.Decision;
 import com.mugloar.domain.PlayerState;
@@ -19,27 +19,28 @@ import java.util.Map;
 public class DecisionEngine {
     private static final Logger log = LoggerFactory.getLogger(DecisionEngine.class);
 
-    private final GameStrategy safeStrategy;
-    private final GameStrategy highScoreStrategy;
+    private final GameStrategy conservativeStrategy;
+    private final GameStrategy highRiskStrategy;
 
     public DecisionEngine() {
-        this(new SafeStrategy(), new HighScoreStrategy());
+        this(new ConservativeStrategy(), new HighRiskStrategy());
     }
 
-    DecisionEngine(GameStrategy safeStrategy, GameStrategy highScoreStrategy) {
-        this.safeStrategy = safeStrategy;
-        this.highScoreStrategy = highScoreStrategy;
+    DecisionEngine(GameStrategy conservativeStrategy, GameStrategy highRiskStrategy) {
+        this.conservativeStrategy = conservativeStrategy;
+        this.highRiskStrategy = highRiskStrategy;
     }
 
     public Decision decide(PlayerState player, List<Advertisement> ads) {
-        return decide(player, ads, StrategyMode.SAFE_1000, Map.of(), 0);
+        return decide(player, ads, StrategyMode.CONSERVATIVE, Map.of(), 0);
     }
 
     /** Keeps manual guidance and automation on the same server-side policy. */
     public Decision decide(PlayerState player, List<Advertisement> ads, StrategyMode mode,
                            Map<String, Integer> purchasedItems, int consecutiveBoardRefreshes) {
         if (player.isFinished()) return Decision.stop("No lives remain.");
-        var strategy = mode == StrategyMode.HIGH_SCORE ? highScoreStrategy : safeStrategy;
+        if (mode == StrategyMode.OFF) return Decision.stop("Strategy is off.");
+        var strategy = mode == StrategyMode.HIGH_RISK ? highRiskStrategy : conservativeStrategy;
         var decision = strategy.decide(player, ads, purchasedItems, consecutiveBoardRefreshes);
         log.debug("Turn {} ({}): {} {} (utility {}) - {}", player.turn(), mode, decision.action(),
                 decision.targetId(), decision.utility(), decision.reason());

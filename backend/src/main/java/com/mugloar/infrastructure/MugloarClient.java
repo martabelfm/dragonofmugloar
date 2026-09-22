@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.mugloar.application.GamePort;
 import com.mugloar.domain.*;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -25,7 +26,10 @@ public class MugloarClient implements GamePort {
                 .registerModule(new SimpleModule().addDeserializer(Advertisement.class, new AdvertisementDeserializer()));
         this.client = builder.baseUrl(properties.baseUrl()).requestFactory(requestFactory)
                 .messageConverters(converters -> {
-                    converters.removeIf(MappingJackson2HttpMessageConverter.class::isInstance);
+                    // Spring 7 ships a Jackson 3-based converter alongside the legacy Jackson 2 one; RestClient
+                    // picks whichever comes first, so both must go before adding our Jackson 2 mapper back.
+                    converters.removeIf(converter -> converter instanceof MappingJackson2HttpMessageConverter
+                            || converter instanceof JacksonJsonHttpMessageConverter);
                     converters.add(new MappingJackson2HttpMessageConverter(mapper));
                 })
                 .build();

@@ -12,7 +12,7 @@ final class GameSession {
     List<ShopItem> shop = List.of();
     Reputation reputation;
     Decision recommendation;
-    StrategyMode strategyMode = StrategyMode.SAFE_1000;
+    StrategyMode strategyMode = StrategyMode.OFF;
     int consecutiveBoardRefreshes;
     final List<TurnRecord> history = new ArrayList<>();
     final Map<String, Integer> purchasedItems = new HashMap<>();

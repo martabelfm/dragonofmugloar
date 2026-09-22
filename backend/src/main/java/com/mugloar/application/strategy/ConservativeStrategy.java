@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 /** Reaches the 1,000-point target with an explainable, low-risk policy. */
-public class SafeStrategy implements GameStrategy {
+public class ConservativeStrategy implements GameStrategy {
     private static final int LIFE_BUFFER = 3;
     private static final int REFRESH_LIMIT = 3;
-    private static final String UPGRADE_ID = "wingpot";
+    private static final List<String> STARTER_UPGRADES = List.of("cs", "gas", "wax", "tricks", "wingpot");
     private static final int INVESTIGATE_UTILITY = 1_000;
 
     @Override
@@ -23,8 +23,9 @@ public class SafeStrategy implements GameStrategy {
                     "Restore the three-life safety buffer before taking another risk.", 10_000);
         }
         if (player.gold() >= ShopPrices.LEVEL_UPGRADE_COST) {
-            return new Decision(Decision.Action.PURCHASE, UPGRADE_ID, "Equipment upgrade",
-                    "Spend available gold on a level upgrade; healing is handled first when wounded.", 9_000);
+            var upgradeId = leastPurchased(STARTER_UPGRADES, purchasedItems);
+            return new Decision(Decision.Action.PURCHASE, upgradeId, "Balanced equipment upgrade",
+                    "Improve the least-trained dragon skill; healing is handled first when wounded.", 9_000);
         }
 
         var safeMission = MissionRanking.safest(safeMissions(ads));
@@ -51,6 +52,12 @@ public class SafeStrategy implements GameStrategy {
 
     private Decision solveDecision(Advertisement mission, String reason) {
         return new Decision(Decision.Action.SOLVE, mission.adId(), mission.message(), reason, utility(mission));
+    }
+
+    private String leastPurchased(List<String> itemIds, Map<String, Integer> purchasedItems) {
+        return itemIds.stream()
+                .min(java.util.Comparator.comparingInt(id -> purchasedItems.getOrDefault(id, 0)))
+                .orElseThrow();
     }
 
     private int utility(Advertisement ad) {

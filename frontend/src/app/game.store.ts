@@ -5,6 +5,7 @@ import { patchState, signalStore, withComputed, withMethods, withState } from '@
 import { ADVERTISEMENT_SAFETY_RANK, TARGET_SCORE } from './game.constants';
 import { Advertisement, GameView, StrategyMode } from './game.models';
 import { GameApiService } from './game-api.service';
+import { translate } from './translate.pipe';
 
 interface GameStoreState {
   game: GameView | null;
@@ -111,7 +112,7 @@ export function sortAds(ads: Advertisement[]): Advertisement[] {
 
 function errorMessage(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
-    return error.error?.detail ?? error.error?.title ?? 'The request could not be completed.';
+    return error.error?.detail ?? error.error?.title ?? translate('requestFailed');
   }
-  return 'An unexpected error occurred.';
+  return translate('unexpectedError');
 }

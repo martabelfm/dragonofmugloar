@@ -10,7 +10,7 @@ import org.springframework.web.client.RestClient;
 @SpringBootApplication
 @EnableConfigurationProperties(MugloarProperties.class)
 public class DragonTrainerApplication {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(DragonTrainerApplication.class, args);
     }
 

@@ -68,7 +68,7 @@ Normal tests never call the live game API, so they remain deterministic. The liv
 | POST | `/api/games/{gameId}/ads/{adId}/solve` | Solve an advertisement |
 | POST | `/api/games/{gameId}/shop/{itemId}/purchase` | Purchase an item |
 | POST | `/api/games/{gameId}/reputation` | Investigate reputation |
-| PUT | `/api/games/{gameId}/strategy-mode` | Select safe or high-score guidance |
+| PUT | `/api/games/{gameId}/strategy-mode` | Select Conservative or High-risk guidance |
 | POST | `/api/games/{gameId}/auto/step` | Execute one recommended action |
 
 ## Manual QA

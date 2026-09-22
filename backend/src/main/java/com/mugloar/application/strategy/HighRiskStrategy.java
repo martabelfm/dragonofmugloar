@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 /** Experimental higher-risk policy: balances upgrades against mission expected value. */
-public class HighScoreStrategy implements GameStrategy {
+public class HighRiskStrategy implements GameStrategy {
     private static final List<String> STARTER_UPGRADES = List.of("cs", "gas", "wax", "tricks", "wingpot");
     private static final List<String> PREMIUM_UPGRADES = List.of("ch", "rf", "iron", "mtrix", "wingpotmax");
 

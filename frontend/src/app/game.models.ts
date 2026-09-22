@@ -27,7 +27,7 @@ export interface Reputation {
   state: number;
   underworld: number;
 }
-export type StrategyMode = 'SAFE_1000' | 'HIGH_SCORE';
+export type StrategyMode = 'OFF' | 'CONSERVATIVE' | 'HIGH_RISK';
 export type DecisionAction = 'SOLVE' | 'HEAL' | 'PURCHASE' | 'INVESTIGATE' | 'STOP';
 
 export interface Decision {
