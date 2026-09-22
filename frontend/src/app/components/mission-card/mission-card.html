@@ -1,0 +1,15 @@
+<article class="mission card" [class.recommended]="store.isGuided('mission', ad().adId)">
+  <div class="mission-labels">
+    <span class="risk" [class]="riskClass()">{{ ad().probability }}</span>
+  </div>
+  <p class="mission-message" [title]="ad().message">{{ ad().message }}</p>
+  <span class="expires" [class.urgent]="ad().expiresIn <= 2">{{ ad().expiresIn }}t</span>
+  <strong class="mission-reward">{{ ad().reward }}g</strong>
+  <button
+    class="button compact"
+    [disabled]="store.busy() || store.automationRunning() || store.game()?.finished"
+    (click)="store.solve(ad().adId)"
+  >
+    {{ 'accept' | translate }}
+  </button>
+</article>

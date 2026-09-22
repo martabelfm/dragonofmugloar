@@ -1,0 +1,19 @@
+<dialog #dialog class="confirmation-dialog" (click)="closeOnBackdrop($event)">
+  <section class="modal-card card">
+    <div class="section-heading">
+      <div><h2>{{ 'confirmNewGameTitle' | translate }}</h2></div>
+      <button class="modal-close" [attr.aria-label]="'continueCurrentGame' | translate" (click)="close()">
+        x
+      </button>
+    </div>
+    <p class="guidance-description">{{ 'confirmNewGameMessage' | translate }}</p>
+    <div class="confirmation-actions">
+      <button class="button ghost" (click)="close()">
+        {{ 'continueCurrentGame' | translate }}
+      </button>
+      <button class="button primary" [disabled]="store.busy()" (click)="confirm()">
+        {{ 'newGame' | translate }}
+      </button>
+    </div>
+  </section>
+</dialog>

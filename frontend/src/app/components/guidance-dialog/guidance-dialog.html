@@ -1,0 +1,52 @@
+<dialog #dialog class="guidance-dialog" (click)="closeOnBackdrop($event)">
+  <section class="modal-card card">
+    <div class="section-heading">
+      <div><h2>{{ 'strategy' | translate }}</h2></div>
+      <button class="modal-close" [attr.aria-label]="'closeGuidance' | translate" (click)="close()">
+        x
+      </button>
+    </div>
+    <p class="guidance-description">
+      {{ 'guidanceDescription' | translate }}
+    </p>
+    <div class="guidance-modal-options">
+      <button
+        class="button ghost"
+        [class.active]="!store.guidanceEnabled()"
+        [disabled]="store.busy()"
+        (click)="disable()"
+      >
+        {{ 'off' | translate }}
+      </button>
+      <button
+        class="button ghost"
+        [class.active]="store.guidanceMode() === 'CONSERVATIVE'"
+        [disabled]="store.busy() || store.automationRunning()"
+        (click)="selectMode('CONSERVATIVE')"
+      >
+        {{ 'conservative' | translate }}
+      </button>
+      <button
+        class="button ghost"
+        [class.active]="store.guidanceMode() === 'HIGH_RISK'"
+        [disabled]="store.busy() || store.automationRunning()"
+        (click)="selectMode('HIGH_RISK')"
+      >
+        {{ 'highRisk' | translate }}
+      </button>
+    </div>
+    @if (strategySelected()) {
+      <div class="strategy-follow-up">
+        <p>{{ 'strategySelected' | translate }}</p>
+        <div class="confirmation-actions">
+          <button class="button ghost" (click)="close()">
+            {{ 'continueManually' | translate }}
+          </button>
+          <button class="button primary" [disabled]="store.busy()" (click)="runAutomation()">
+            {{ 'runAutomation' | translate }}
+          </button>
+        </div>
+      </div>
+    }
+  </section>
+</dialog>

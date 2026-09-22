@@ -1,0 +1,7 @@
+/* Otherwise this host defaults to display:inline and counts as a stray grid item in whatever grid it's placed in. */
+:host {
+  display: contents;
+}
+.confirmation-dialog {
+  width: min(480px, calc(100vw - 28px));
+}

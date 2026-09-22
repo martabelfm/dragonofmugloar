@@ -1,0 +1,29 @@
+/* Otherwise this host defaults to display:inline and counts as a stray grid item in whatever grid it's placed in. */
+:host {
+  display: contents;
+}
+.guidance-dialog {
+  width: min(430px, calc(100vw - 28px));
+}
+.guidance-modal-options {
+  display: grid;
+  gap: 8px;
+}
+.guidance-modal-options .active {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: #171a18;
+}
+.strategy-follow-up {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.strategy-follow-up p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}

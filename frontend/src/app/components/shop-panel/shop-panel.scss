@@ -1,0 +1,108 @@
+/* Rendered as a direct grid item of .content-grid (see app.scss); stay transparent to that layout. */
+:host {
+  display: contents;
+}
+aside {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  max-height: calc(100vh - 385px);
+  overflow: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+.side-card {
+  padding: 14px;
+}
+.shop-list {
+  display: grid;
+}
+.compact-shop {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.shop-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.shop-item.recommended {
+  border-color: var(--gold);
+  background: rgba(184, 135, 47, 0.12);
+  box-shadow: inset 3px 0 var(--gold);
+}
+.shop-item.recommended::before {
+  content: 'NEXT';
+  position: absolute;
+  z-index: 1;
+  top: -6px;
+  right: 7px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--gold);
+  color: #171a18;
+  font-size: 0.5rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+.shop-item div {
+  display: grid;
+  gap: 4px;
+}
+.shop-item strong {
+  font-size: 0.85rem;
+}
+.shop-item span {
+  color: var(--muted);
+  font-size: 0.77rem;
+}
+.icon-button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line-bright);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gold-light);
+  cursor: pointer;
+}
+.icon-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+@media (min-width: 901px) {
+  aside {
+    max-height: none;
+    overflow: hidden;
+  }
+  .compact-shop {
+    grid-auto-rows: minmax(42px, auto);
+  }
+  .shop-item {
+    padding-block: 5px;
+  }
+}
+@media (max-width: 900px) {
+  aside {
+    max-height: none;
+    overflow: visible;
+  }
+  .side-card {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  #shop {
+    scroll-margin-top: 12px;
+  }
+}
+@media (max-width: 580px) {
+  .compact-shop {
+    grid-template-columns: 1fr;
+  }
+}

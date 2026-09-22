@@ -38,3 +38,136 @@ button:focus-visible {
   outline: 3px solid rgba(235, 202, 126, 0.45);
   outline-offset: 2px;
 }
+
+/* Shared design-system primitives used across components. */
+.card {
+  background: linear-gradient(145deg, rgba(29, 34, 31, 0.96), rgba(20, 24, 22, 0.96));
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+}
+.button {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid var(--gold-muted);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cream);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--gold);
+}
+.button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+.button.primary {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: #171a18;
+}
+.button.ghost {
+  border-color: var(--line-bright);
+}
+.button.compact {
+  min-height: 36px;
+  padding: 0 13px;
+}
+.button.full {
+  width: 100%;
+}
+.danger-button {
+  border-color: #b55d59;
+  color: #f1aaa5;
+}
+.eyebrow {
+  margin: 0 0 7px;
+  color: var(--gold);
+  font-size: 0.69rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 17px;
+}
+.section-heading h2 {
+  margin: 0;
+  font:
+    600 1.25rem/1.2 Georgia,
+    serif;
+}
+.section-heading > div:first-child {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.section-heading > div:first-child > .eyebrow {
+  margin: 0;
+  white-space: nowrap;
+}
+.section-heading > span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.muted {
+  color: var(--muted);
+  font-size: 0.77rem;
+}
+
+/* Shared native <dialog> chrome for guidance, new-game, and chronicle dialogs. */
+.chronicle-dialog,
+.guidance-dialog,
+.confirmation-dialog {
+  width: min(680px, calc(100vw - 28px));
+  max-height: min(760px, calc(100vh - 28px));
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--cream);
+}
+.chronicle-dialog::backdrop,
+.guidance-dialog::backdrop,
+.confirmation-dialog::backdrop {
+  background: rgba(5, 8, 7, 0.78);
+  backdrop-filter: blur(3px);
+}
+.modal-card {
+  padding: 22px;
+}
+.modal-close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line-bright);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cream);
+  cursor: pointer;
+}
+.confirmation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.guidance-description {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}

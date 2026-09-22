@@ -1,0 +1,194 @@
+/* Rendered as the first row of .page-shell's grid (see app.scss); stay transparent to that layout. */
+:host {
+  display: contents;
+}
+.hero {
+  min-height: 118px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.brand-mark {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font:
+    700 28px/1 Georgia,
+    serif;
+  transform: rotate(45deg);
+}
+.brand-mark::first-letter {
+  transform: rotate(-45deg);
+}
+.hero h1 {
+  margin: 1px 0 0;
+  font:
+    600 clamp(1.3rem, 2vw, 1.8rem)/1.1 Georgia,
+    serif;
+  letter-spacing: 0.02em;
+}
+.new-game {
+  margin-left: 0;
+}
+.header-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.strategy-button {
+  display: inline-grid;
+  place-items: center;
+}
+.header-run {
+  display: inline-grid;
+  place-items: center;
+}
+.header-stats {
+  display: flex;
+  align-items: stretch;
+  gap: 1px;
+  overflow: hidden;
+  margin-left: auto;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--line);
+}
+.header-stats > span {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 1px 8px;
+  min-width: 88px;
+  padding: 8px 11px;
+  background: var(--surface);
+}
+.header-stats small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 0.57rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.header-stats strong {
+  color: var(--cream);
+  font:
+    600 1.08rem/1 Georgia,
+    serif;
+}
+.header-stats > span:first-child strong {
+  color: var(--gold-light);
+}
+.header-stats > span:first-child {
+  min-width: 132px;
+}
+.header-stats > span:first-child strong {
+  font-size: 1.75rem;
+}
+.header-stats em {
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-style: normal;
+}
+.header-stats + .header-actions {
+  margin-left: 0;
+}
+@media (min-width: 901px) {
+  .hero {
+    min-height: 0;
+  }
+  .hero .eyebrow {
+    margin-bottom: 3px;
+  }
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    font-size: 23px;
+  }
+  .new-game {
+    min-height: 36px;
+  }
+}
+@media (max-width: 900px) {
+  .header-stats {
+    order: 3;
+    width: 100%;
+  }
+  .header-actions {
+    order: 2;
+    width: 100%;
+    justify-content: flex-start;
+    margin-left: 0;
+  }
+  .header-run {
+    display: inline-grid;
+    grid-template-columns: auto auto;
+    place-items: center;
+  }
+  .header-run::before {
+    content: '→';
+    margin-right: 5px;
+  }
+  .desktop-header-stop {
+    display: none;
+  }
+  .hero {
+    flex-wrap: wrap;
+    padding: 12px 0;
+  }
+}
+@media (max-width: 580px) {
+  .hero {
+    min-height: 82px;
+  }
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+    font-size: 21px;
+  }
+  .hero .eyebrow {
+    display: none;
+  }
+  .hero h1 {
+    font-size: 1.05rem;
+  }
+  .new-game {
+    min-height: 38px;
+    padding: 0 11px;
+  }
+  .header-actions {
+    gap: 5px;
+  }
+  .strategy-button {
+    min-height: 38px;
+    padding: 0 9px;
+    font-size: 0.68rem;
+  }
+  .header-run {
+    min-height: 38px;
+    padding: 0 9px;
+    font-size: 0.65rem;
+  }
+  .strategy-button small,
+  .strategy-button strong {
+    display: block;
+    line-height: 1.05;
+  }
+  .strategy-button small {
+    color: var(--muted);
+    font-size: 0.5rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .header-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .header-stats > span {
+    min-width: 0;
+  }
+}

@@ -1,3 +1,5 @@
+import { Advertisement } from './game.models';
+
 /** UI-only values. Game policy remains authoritative in the backend. */
 export const TARGET_SCORE = 1_000;
 
@@ -15,3 +17,10 @@ export const ADVERTISEMENT_SAFETY_RANK: Readonly<Record<string, number>> = {
   'Suicide mission': 2,
   Impossible: 1,
 };
+
+export function riskClass(ad: Advertisement): string {
+  const rank = ADVERTISEMENT_SAFETY_RANK[ad.probability] ?? 0;
+  if (rank >= 9) return 'risk safe';
+  if (rank >= 6) return 'risk medium';
+  return 'risk danger';
+}

@@ -1,0 +1,52 @@
+.mobile-stop {
+  display: none;
+}
+.mobile-section-nav {
+  display: none;
+}
+@media (max-width: 900px) {
+  .mobile-stop {
+    position: fixed;
+    z-index: 30;
+    right: 18px;
+    bottom: max(18px, env(safe-area-inset-bottom));
+    display: block;
+    min-height: 46px;
+    padding-inline: 18px;
+    background: #391f1d;
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.42);
+  }
+  .mobile-section-nav {
+    position: fixed;
+    z-index: 25;
+    left: 0;
+    top: 50%;
+    display: grid;
+    overflow: hidden;
+    border: 1px solid var(--line-bright);
+    border-left: 0;
+    border-radius: 0 9px 9px 0;
+    background: rgba(20, 24, 22, 0.96);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32);
+    transform: translateY(-50%);
+  }
+  .mobile-section-nav button {
+    display: grid;
+    width: 34px;
+    height: 36px;
+    place-items: center;
+    padding: 0;
+    border-bottom: 1px solid var(--line);
+    border-top: 0;
+    border-right: 0;
+    border-left: 0;
+    background: transparent;
+    color: var(--cream);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .mobile-section-nav button:last-child {
+    border-bottom: 0;
+  }
+}

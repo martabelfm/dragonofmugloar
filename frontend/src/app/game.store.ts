@@ -21,16 +21,45 @@ const initialState: GameStoreState = {
   error: null,
 };
 
+export interface Guidance {
+  type: 'mission' | 'item' | 'none';
+  targetId: string | null;
+  label: string;
+}
+
 export const GameStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
-  withComputed(({ game }) => ({
-    player: computed(() => game()?.player ?? null),
-    ads: computed(() => sortAds(game()?.ads ?? [])),
-    shop: computed(() => game()?.shop ?? []),
-    history: computed(() => [...(game()?.history ?? [])].reverse()),
-    progress: computed(() => Math.min(100, ((game()?.player.score ?? 0) / TARGET_SCORE) * 100)),
-  })),
+  withComputed(({ game }) => {
+    const guidanceMode = computed<StrategyMode>(() => game()?.strategyMode ?? 'OFF');
+    const guidanceEnabled = computed(() => guidanceMode() !== 'OFF');
+    const guidance = computed<Guidance | null>(() => {
+      const current = game();
+      if (!current || current.finished || !guidanceEnabled()) return null;
+      const recommendation = current.recommendation;
+      return {
+        type:
+          recommendation.action === 'SOLVE'
+            ? 'mission'
+            : recommendation.action === 'PURCHASE' || recommendation.action === 'HEAL'
+              ? 'item'
+              : 'none',
+        targetId: recommendation.targetId,
+        label: recommendation.title,
+      };
+    });
+
+    return {
+      player: computed(() => game()?.player ?? null),
+      ads: computed(() => sortAds(game()?.ads ?? [])),
+      shop: computed(() => game()?.shop ?? []),
+      history: computed(() => [...(game()?.history ?? [])].reverse()),
+      progress: computed(() => Math.min(100, ((game()?.player.score ?? 0) / TARGET_SCORE) * 100)),
+      guidanceMode,
+      guidanceEnabled,
+      guidance,
+    };
+  }),
   withMethods((store, api = inject(GameApiService)) => {
     // Shared across all methods below: starting or loading a different game must also break any
     // `runDecisionAutomation` loop still in flight for the previous game, since that loop only
@@ -46,6 +75,14 @@ export const GameStore = signalStore(
         patchState(store, { busy: false, error: errorMessage(error) });
         return null;
       }
+    };
+    const stop = () => {
+      stopRequested = true;
+      patchState(store, { automationRunning: false });
+    };
+    const updateStrategyMode = (mode: StrategyMode) => {
+      const id = store.player()?.gameId;
+      return id ? execute(() => api.updateStrategyMode(id, mode)) : Promise.resolve(null);
     };
 
     return {
@@ -73,10 +110,7 @@ export const GameStore = signalStore(
         const id = store.player()?.gameId;
         if (id) await execute(() => api.investigate(id));
       },
-      async updateStrategyMode(mode: StrategyMode) {
-        const id = store.player()?.gameId;
-        return id ? execute(() => api.updateStrategyMode(id, mode)) : null;
-      },
+      updateStrategyMode,
       async runDecisionAutomation() {
         if (!store.player() || store.automationRunning()) return;
         stopRequested = false;
@@ -91,9 +125,15 @@ export const GameStore = signalStore(
         }
         patchState(store, { automationRunning: false, busy: false });
       },
-      stopAutomation() {
-        stopRequested = true;
-        patchState(store, { automationRunning: false });
+      stopAutomation: stop,
+      disableGuidance() {
+        stop();
+        void updateStrategyMode('OFF');
+      },
+      isGuided(type: 'mission' | 'item', targetId: string): boolean {
+        if (!store.guidanceEnabled()) return false;
+        const guidance = store.guidance();
+        return guidance?.type === type && guidance.targetId === targetId;
       },
       dismissError() {
         patchState(store, { error: null });

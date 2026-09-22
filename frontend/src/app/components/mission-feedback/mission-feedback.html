@@ -1,0 +1,7 @@
+@if (feedback(); as value) {
+  <div class="mission-feedback" [class.success]="value.successful" [class.failure]="!value.successful" role="status">
+    <span>{{ value.successful ? '✓' : '×' }}</span
+    ><strong>{{ (value.successful ? 'missionComplete' : 'missionFailed') | translate }}</strong
+    ><small>{{ value.message }}</small>
+  </div>
+}

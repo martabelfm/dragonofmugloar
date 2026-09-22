@@ -1,0 +1,51 @@
+@let player = store.player()!;
+@let game = store.game()!;
+<section id="missions" class="missions">
+  <div class="section-heading">
+    <div>
+      <h2>{{ 'availableMissions' | translate }}</h2>
+    </div>
+    <div class="heading-actions">
+      <span>{{ store.ads().length }} {{ 'notices' | translate }}</span>
+    </div>
+  </div>
+  <div class="mission-list">
+    @for (ad of store.ads(); track ad.adId) {
+      <app-mission-card [ad]="ad" />
+    } @empty {
+      @if (game.finished) {
+        <section class="game-over card">
+          <div class="game-over-mark" aria-hidden="true">0</div>
+          <div class="game-over-copy">
+            <p class="eyebrow">{{ 'dragonFallen' | translate }}</p>
+            <h2>{{ 'gameOver' | translate }}</h2>
+            <p>{{ 'gameOverMessage' | translate }}</p>
+          </div>
+          <dl class="final-stats">
+            <div>
+              <dt>{{ 'score' | translate }}</dt>
+              <dd>{{ player.score | number }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'gold' | translate }}</dt>
+              <dd>{{ player.gold | number }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'level' | translate }}</dt>
+              <dd>{{ player.level | number }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'turns' | translate }}</dt>
+              <dd>{{ player.turn | number }}</dd>
+            </div>
+          </dl>
+          <button class="button primary" [disabled]="store.busy()" (click)="playAgain.emit()">
+            {{ 'startNewGame' | translate }}
+          </button>
+        </section>
+      } @else {
+        <div class="empty card">{{ 'noMissions' | translate }}</div>
+      }
+    }
+  </div>
+</section>

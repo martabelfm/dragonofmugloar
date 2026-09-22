@@ -1,0 +1,32 @@
+@if (store.automationRunning()) {
+  <button class="button danger-button mobile-stop" (click)="store.stopAutomation()">
+    {{ 'stopAutomation' | translate }}
+  </button>
+} @else {
+  <nav class="mobile-section-nav" [attr.aria-label]="'pageNavigation' | translate">
+    <button
+      type="button"
+      [attr.aria-label]="'controls' | translate"
+      [attr.title]="'controls' | translate"
+      (click)="scrollToTop()"
+    >
+      <span aria-hidden="true">&#8593;</span>
+    </button>
+    <button
+      type="button"
+      [attr.aria-label]="'missions' | translate"
+      [attr.title]="'missions' | translate"
+      (click)="scrollToSection('missions')"
+    >
+      <span aria-hidden="true">&#9776;</span>
+    </button>
+    <button
+      type="button"
+      [attr.aria-label]="'shop' | translate"
+      [attr.title]="'shop' | translate"
+      (click)="scrollToSection('shop')"
+    >
+      <span aria-hidden="true">&#9830;</span>
+    </button>
+  </nav>
+}

@@ -1,0 +1,26 @@
+<dialog #dialog class="chronicle-dialog" (click)="closeOnBackdrop($event)">
+  <section class="modal-card card">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">{{ 'chronicle' | translate }}</p>
+        <h2>{{ 'recentTurns' | translate }}</h2>
+      </div>
+      <button class="modal-close" [attr.aria-label]="'closeChronicles' | translate" (click)="close()">
+        x
+      </button>
+    </div>
+    <ol class="history">
+      @for (turn of store.history(); track turn.turn) {
+        <li>
+          <span [class.success]="turn.successful" [class.failure]="!turn.successful"></span>
+          <div>
+            <strong>{{ 'turn' | translate }} {{ turn.turn }} - {{ turn.action }}</strong
+            ><small>{{ turn.description }}</small>
+          </div>
+        </li>
+      } @empty {
+        <li class="muted">{{ 'emptyChronicle' | translate }}</li>
+      }
+    </ol>
+  </section>
+</dialog>

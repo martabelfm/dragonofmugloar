@@ -1,0 +1,59 @@
+<header class="hero">
+  <div class="brand-mark" aria-hidden="true">M</div>
+  <div>
+    <p class="eyebrow">{{ 'guild' | translate }}</p>
+    <h1>{{ 'appTitle' | translate }}</h1>
+  </div>
+  @if (store.player(); as headerPlayer) {
+    <div class="header-stats" [attr.aria-label]="'gameStatus' | translate">
+      <span
+        ><small>{{ 'score' | translate }}</small
+        ><strong>{{ headerPlayer.score | number }}</strong></span
+      >
+      <span
+        ><small>{{ 'gold' | translate }}</small
+        ><strong>{{ headerPlayer.gold | number }}</strong></span
+      >
+      <span
+        ><small>{{ 'lives' | translate }}</small><strong>{{ headerPlayer.lives }}</strong></span
+      >
+      <span
+        ><small>{{ 'level' | translate }}</small><strong>{{ headerPlayer.level }}</strong
+        ><em>T{{ headerPlayer.turn }}</em></span
+      >
+    </div>
+  }
+  <div class="header-actions">
+    <button
+      class="button primary new-game"
+      [disabled]="store.busy() || store.automationRunning()"
+      (click)="requestNewGame()"
+    >
+      {{ (store.player() ? 'newGame' : 'beginAdventure') | translate }}
+    </button>
+    @if (store.player()) {
+      <button class="button ghost strategy-button" (click)="openGuidance()">
+        <small>{{ 'strategy' | translate }}</small>
+        <strong>{{ guidanceButtonLabel() }}</strong>
+      </button>
+      @if (store.guidanceEnabled() && !store.automationRunning()) {
+        <button
+          class="button primary header-run"
+          [disabled]="
+            store.busy() || store.game()?.finished || store.game()?.recommendation?.action === 'STOP'
+          "
+          (click)="store.runDecisionAutomation()"
+        >
+          {{ 'runAutomation' | translate }}
+        </button>
+      }
+      @if (store.automationRunning()) {
+        <button class="button danger-button desktop-header-stop" (click)="store.stopAutomation()">
+          {{ 'stopAutomation' | translate }}
+        </button>
+      }
+    }
+  </div>
+</header>
+<app-new-game-dialog (confirmed)="newGame.emit()" />
+<app-guidance-dialog />

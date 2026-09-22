@@ -1,0 +1,39 @@
+@let game = store.game()!;
+<aside id="controls" class="action-rail card">
+  <div class="rail-progress">
+    <span>{{ 'goalProgress' | translate }}</span><strong>{{ store.progress() | number: '1.0-0' }}%</strong>
+    <div class="progress-track"><span [style.width.%]="store.progress()"></span></div>
+  </div>
+  <div class="automation-actions">
+    <button class="button ghost" [disabled]="store.busy() || store.automationRunning()" (click)="store.refresh()">
+      {{ 'refreshBoard' | translate }}</button
+    ><button class="button ghost" (click)="openChronicle()">
+      {{ 'chronicles' | translate }}
+    </button>
+  </div>
+  <div class="rail-intelligence">
+    <span>{{ 'reputation' | translate }}</span>
+    @if (game.reputation; as reputation) {
+      <div>
+        <small
+          >{{ 'people' | translate }} <b>{{ reputation.people | number: '1.0-1' }}</b></small
+        ><small
+          >{{ 'state' | translate }} <b>{{ reputation.state | number: '1.0-1' }}</b></small
+        ><small
+          >{{ 'underworld' | translate }} <b>{{ reputation.underworld | number: '1.0-1' }}</b></small
+        >
+      </div>
+    } @else {
+      <small>{{ 'notInvestigated' | translate }}</small>
+    }
+    <button
+      class="button ghost"
+      [class.investigate-recommended]="store.guidanceEnabled() && game.recommendation.action === 'INVESTIGATE'"
+      [disabled]="store.busy() || store.automationRunning() || game.finished"
+      (click)="store.investigate()"
+    >
+      {{ 'investigate' | translate }}
+    </button>
+  </div>
+</aside>
+<app-chronicle-dialog />

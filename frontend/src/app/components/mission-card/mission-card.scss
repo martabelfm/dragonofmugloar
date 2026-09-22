@@ -1,0 +1,160 @@
+/* Rendered as a direct grid item of .mission-list (see mission-board.scss); stay transparent to that layout. */
+:host {
+  display: contents;
+}
+.mission {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 34px 58px auto;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 9px 8px;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.mission:hover {
+  transform: translateY(-1px);
+  border-color: var(--line-bright);
+}
+.mission.recommended {
+  border-color: var(--gold);
+  box-shadow:
+    inset 3px 0 var(--gold),
+    0 16px 40px rgba(0, 0, 0, 0.18);
+}
+.mission.recommended::before {
+  content: 'NEXT';
+  position: absolute;
+  z-index: 1;
+  top: -6px;
+  right: 7px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--gold);
+  color: #171a18;
+  font-size: 0.5rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+.mission-labels {
+  position: absolute;
+  z-index: 1;
+  top: -6px;
+  left: 7px;
+  display: inline-flex;
+  align-items: center;
+}
+.mission-message {
+  min-width: 0;
+  overflow: hidden;
+  margin: 0;
+  color: #e2dfd4;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mission-reward {
+  color: var(--gold-light);
+  font-size: 0.78rem;
+  text-align: right;
+}
+.risk {
+  padding: 4px 9px;
+  border-radius: 10px;
+  font-size: 0.69rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.risk.safe {
+  background: #193b2b;
+  color: #8ed4a8;
+}
+.risk.medium {
+  background: #43351b;
+  color: #e2bf72;
+}
+.risk.danger {
+  background: #442321;
+  color: #e49891;
+}
+.expires {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.expires.urgent {
+  color: #ef9a91;
+}
+@media (min-width: 901px) {
+  .mission-message {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+  }
+  .mission {
+    min-height: 0;
+  }
+}
+@media (min-width: 901px) and (max-width: 1440px) {
+  .mission {
+    grid-template-columns: auto auto 1fr;
+    grid-template-areas:
+      'message message message'
+      'expires reward button';
+    align-items: center;
+    gap: 5px 8px;
+    padding: 20px 10px 8px;
+  }
+  .mission-message {
+    grid-area: message;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+  }
+  .expires {
+    grid-area: expires;
+  }
+  .mission-reward {
+    grid-area: reward;
+    text-align: left;
+  }
+  .mission .button.compact {
+    grid-area: button;
+    justify-self: end;
+    min-width: 58px;
+    padding-inline: 8px;
+    min-height: 24px;
+  }
+}
+@media (max-width: 580px) {
+  .mission {
+    grid-template-columns: 1fr auto auto;
+    grid-template-areas:
+      'message message message'
+      'expires reward button';
+    gap: 6px 9px;
+  }
+  .mission-message {
+    grid-area: message;
+    white-space: normal;
+  }
+  .mission .expires {
+    grid-area: expires;
+  }
+  .mission-reward {
+    grid-area: reward;
+    display: inline;
+  }
+  .mission .button.compact {
+    grid-area: button;
+    justify-self: end;
+  }
+}

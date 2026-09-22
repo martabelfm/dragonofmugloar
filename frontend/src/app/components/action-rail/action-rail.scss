@@ -1,0 +1,92 @@
+/* Rendered as a direct grid item of .dashboard-layout (see app.scss); stay transparent to that layout. */
+:host {
+  display: contents;
+}
+.action-rail {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+  border-color: var(--gold-muted);
+}
+.action-rail .button {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 9px;
+  font-size: 0.69rem;
+}
+.automation-actions {
+  display: grid;
+  gap: 7px;
+}
+.progress-track {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #0d100f;
+}
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #8f6b28, var(--gold-light));
+  transition: width 0.4s ease;
+}
+.rail-progress {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.rail-progress strong {
+  color: var(--gold-light);
+}
+.rail-progress .progress-track {
+  grid-column: 1 / -1;
+}
+.rail-intelligence {
+  display: grid;
+  gap: 7px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.rail-intelligence > span {
+  color: var(--gold);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.rail-intelligence > div {
+  display: grid;
+  gap: 4px;
+}
+.rail-intelligence small {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.65rem;
+}
+.rail-intelligence b {
+  color: var(--gold-light);
+}
+@media (min-width: 901px) {
+  .action-rail {
+    max-height: none;
+    overflow: hidden;
+    padding-right: 14px;
+  }
+}
+@media (max-width: 900px) {
+  .action-rail {
+    order: -1;
+  }
+  #controls {
+    scroll-margin-top: 12px;
+  }
+}
