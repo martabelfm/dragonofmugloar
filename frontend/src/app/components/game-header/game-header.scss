@@ -74,20 +74,35 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-.header-stats strong {
+.header-stats strong,
+.header-stats .score-value {
   color: var(--cream);
   font:
     600 1.08rem/1 Georgia,
     serif;
 }
-.header-stats > span:first-child strong {
+.header-stats > span:first-child strong,
+.header-stats > span:first-child .score-value {
   color: var(--gold-light);
 }
 .header-stats > span:first-child {
   min-width: 132px;
 }
-.header-stats > span:first-child strong {
+.header-stats > span:first-child strong,
+.header-stats > span:first-child .score-value {
   font-size: 1.75rem;
+}
+button.score-value {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+button.score-value:hover,
+button.score-value:focus-visible {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
 }
 .header-stats em {
   color: var(--muted);

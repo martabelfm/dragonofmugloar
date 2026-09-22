@@ -24,3 +24,19 @@ export function riskClass(ad: Advertisement): string {
   if (rank >= 6) return 'risk medium';
   return 'risk danger';
 }
+
+/** Matches the layout breakpoint the rest of the app treats as "mobile" (see app.scss). */
+export const MOBILE_MAX_WIDTH_QUERY = '(max-width: 900px)';
+
+/** Score display abbreviates sooner on a narrow (mobile) viewport, where header space is tighter. */
+export const MOBILE_SCORE_ABBREVIATION_THRESHOLD = 1_000_000;
+export const DESKTOP_SCORE_ABBREVIATION_THRESHOLD = 100_000_000;
+
+/** Formats a large score compactly, e.g. 12_345_000 -> "12.3M". Callers decide when to use this
+ * instead of the exact number; below a million it would round away too much precision. */
+export function abbreviateScore(score: number): string {
+  const useBillions = score >= 1_000_000_000;
+  const divisor = useBillions ? 1_000_000_000 : 1_000_000;
+  const suffix = useBillions ? 'B' : 'M';
+  return `${(score / divisor).toFixed(1)}${suffix}`;
+}

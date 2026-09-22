@@ -6,10 +6,21 @@
   </div>
   @if (store.player(); as headerPlayer) {
     <div class="header-stats" [attr.aria-label]="'gameStatus' | translate">
-      <span
-        ><small>{{ 'score' | translate }}</small
-        ><strong>{{ headerPlayer.score | number }}</strong></span
-      >
+      <span>
+        <small>{{ 'score' | translate }}</small>
+        @if (isScoreAbbreviated(headerPlayer.score)) {
+          <button
+            type="button"
+            class="score-value"
+            [title]="headerPlayer.score | number"
+            [attr.aria-pressed]="scoreExpanded()"
+            [attr.aria-label]="(scoreExpanded() ? 'collapseScore' : 'expandScore') | translate"
+            (click)="scoreExpanded.set(!scoreExpanded())"
+          >{{ scoreText(headerPlayer.score) }}</button>
+        } @else {
+          <strong class="score-value">{{ headerPlayer.score | number }}</strong>
+        }
+      </span>
       <span
         ><small>{{ 'gold' | translate }}</small
         ><strong>{{ headerPlayer.gold | number }}</strong></span

@@ -1,4 +1,5 @@
 import { Component, effect, inject } from '@angular/core';
+import { MOBILE_MAX_WIDTH_QUERY } from '../../game.constants';
 import { GameStore } from '../../game.store';
 import { TranslatePipe } from '../../translate.pipe';
 
@@ -28,7 +29,7 @@ export class MobileNavComponent {
     if (!this.store.guidanceEnabled() || !game || game.finished || game.recommendation.action === 'STOP')
       return;
     setTimeout(() => {
-      if (!window.matchMedia('(max-width: 900px)').matches || !this.store.guidanceEnabled()) return;
+      if (!window.matchMedia(MOBILE_MAX_WIDTH_QUERY).matches || !this.store.guidanceEnabled()) return;
       document
         .querySelector<HTMLElement>('.recommended, .investigate-recommended')
         ?.scrollIntoView({ behavior: 'smooth', block: 'center' });

@@ -39,15 +39,6 @@ class FakeGameApiService {
 describe('GuidanceDialogComponent', () => {
   let api: FakeGameApiService;
 
-  beforeAll(() => {
-    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
-      this.setAttribute('open', '');
-    };
-    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
-      this.removeAttribute('open');
-    };
-  });
-
   beforeEach(() => {
     api = new FakeGameApiService();
     TestBed.configureTestingModule({ providers: [{ provide: GameApiService, useValue: api }] });

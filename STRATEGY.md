@@ -26,11 +26,26 @@ The deterministic `GameServiceTest` validates that this automation reaches the a
 
 High-risk mode is a deliberately isolated experimental policy. It evaluates actions in this exact priority order:
 
-1. With one life and at least 50 gold, buy a healing potion.
-2. With two lives and at least 150 gold, buy the least-purchased starter upgrade while reserving 50 gold for emergency healing.
-3. With at least 350 gold, buy the least-purchased premium upgrade from `ch`, `rf`, `iron`, `mtrix`, and `wingpotmax`, again retaining the 50-gold healing reserve.
-4. Exclude `Suicide mission`, `Impossible`, and unknown risks while any other mission exists.
-5. With one life, choose the safest non-terminal mission. With more lives, select the non-terminal mission with the highest calculated utility.
+1. With two lives or fewer and at least 50 gold, buy a healing potion. This always comes first, even
+   mid-streak — staying alive is non-negotiable. Earlier revisions only healed at one life and instead
+   bought a cheap upgrade at exactly two lives — that starved gold that should have gone to healing and
+   left the dragon stuck at two lives, never affording a premium upgrade again.
+2. Otherwise, while every mission on the board is rated `Sure thing`, keep solving the best-paying one
+   instead of shopping. A late-game `Sure thing` can be worth far more than any upgrade costs, so
+   pausing to buy one is a wasted turn.
+3. Otherwise (the board is no longer all `Sure thing`), invest in up to two starter upgrades total (from
+   `cs`, `gas`, `wax`, `tricks`, `wingpot`, least-purchased first) whenever one is affordable. Once two
+   have been bought, starter upgrades are left alone and gold is saved for premium ones instead.
+4. Otherwise, with at least 350 gold, buy the least-purchased premium upgrade from `ch`, `rf`, `iron`,
+   `mtrix`, and `wingpotmax`, retaining a 50-gold healing reserve. Combined with rule 2, this means: once
+   a mission harder than `Sure thing` appears, gold is spent on premium upgrades turn after turn until
+   the board is entirely `Sure thing` again, at which point rule 2 takes back over.
+5. Otherwise, solve a mission. Before turn 15, only "green" missions rated `Walk in the park` or safer
+   are considered, falling back to the usual pick below if none is on the board. From turn 15 onward,
+   `Suicide mission`, `Impossible`, and unknown risks are excluded while any other mission exists; with
+   one life, the safest non-terminal mission is chosen; if every remaining mission's reward is already
+   at least 200 gold (no upper bound), the safest one is taken outright since the extra reward elsewhere isn't
+   worth chasing; otherwise the mission with the highest calculated utility is chosen.
 6. If only terminal-risk missions remain, choose the safest of them as a last resort. If the board is empty, investigate.
 
 Mission utility changes with the run. Before turn 15, safety and normalized reward each receive equal weight. From turn 15 onward, safety receives more weight and reward less; missions below 300 reward also use the lower difficulty weight. Equal utility is resolved in favor of the mission expiring sooner.

@@ -2,6 +2,24 @@
 
 A full-stack client for the [Dragons of Mugloar](https://dragonsofmugloar.com/) engineering assignment. It supports deliberate manual play and optional server-led guidance, while keeping all turn-changing calls behind a single backend API.
 
+## Tech stack
+
+**Backend** — `backend/`
+- Java 25, built with Maven (via `./mvnw`)
+- Spring Boot 4.1.1 (Web, Validation, Actuator)
+- springdoc-openapi 3.0.1 for the OpenAPI/Swagger UI
+- Caffeine for caching
+- JUnit 5 + AssertJ (`spring-boot-starter-test`) and WireMock for tests
+
+**Frontend** — `frontend/`
+- Angular 22 (standalone components, native control flow)
+- NgRx Signal Store (`@ngrx/signals`) for state management
+- RxJS 7 and TypeScript 6.0
+- Vitest, via Angular's `@angular/build:unit-test` builder, for unit tests
+
+**Tooling**
+- Docker / Docker Compose for local orchestration (see [Run locally](#run-locally))
+
 ## Requirements coverage
 
 | Assignment requirement | Implementation | Verification |

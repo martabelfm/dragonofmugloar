@@ -80,12 +80,79 @@ class DecisionEngineTest {
 
     @Test
     void highScoreModeBalancesPremiumUpgrades() {
-        var purchases = Map.of("ch", 2, "rf", 1, "iron", 0, "mtrix", 3, "wingpotmax", 1);
-        var decision = engine.decide(player(3, 350), List.of(ad("sure", 500, "Sure thing")),
+        var purchases = Map.of(
+                "cs", 2, "gas", 2, // starter-upgrade investment already complete
+                "ch", 2, "rf", 1, "iron", 0, "mtrix", 3, "wingpotmax", 1);
+        var decision = engine.decide(player(3, 350), List.of(ad("mission", 500, "Quite likely")),
                 StrategyMode.HIGH_RISK, purchases, 0);
 
         assertThat(decision).extracting(Decision::action, Decision::targetId)
                 .containsExactly(Decision.Action.PURCHASE, "iron");
+    }
+
+    @Test
+    void highScoreModeInvestsInTwoStarterUpgradesBeforePremiumOnes() {
+        var decision = engine.decide(player(3, 350), List.of(ad("mission", 500, "Quite likely")),
+                StrategyMode.HIGH_RISK, Map.of(), 0);
+
+        assertThat(decision).extracting(Decision::action, Decision::targetId)
+                .containsExactly(Decision.Action.PURCHASE, "cs");
+    }
+
+    @Test
+    void highScoreModeHealsAtTwoLivesInsteadOfBuyingACheapUpgrade() {
+        var decision = engine.decide(player(2, 200), List.of(ad("mission", 500, "Quite likely")),
+                StrategyMode.HIGH_RISK, Map.of(), 0);
+
+        assertThat(decision).extracting(Decision::action, Decision::targetId)
+                .containsExactly(Decision.Action.HEAL, "hpot");
+    }
+
+    @Test
+    void highScoreModeSticksToGreenMissionsEarlyEvenWhenARiskierOneIsMoreRewarding() {
+        var decision = engine.decide(player(3, 0), List.of(
+                ad("risky-big", 900, "Risky"), ad("green-small", 30, "Walk in the park")),
+                StrategyMode.HIGH_RISK, Map.of(), 0);
+
+        assertThat(decision.targetId()).isEqualTo("green-small");
+    }
+
+    @Test
+    void highScoreModeKeepsSolvingInsteadOfShoppingWhileEveryMissionIsASureThing() {
+        var purchases = Map.of("cs", 2, "gas", 2); // starter investment already complete
+        var decision = engine.decide(player(3, 400), List.of(
+                ad("small", 50, "Sure thing"), ad("large", 900, "Sure thing")),
+                StrategyMode.HIGH_RISK, purchases, 0);
+
+        // 400 gold is enough for a premium upgrade, but the board is entirely "Sure thing" so it
+        // keeps cashing in the best-paying one instead of pausing to shop.
+        assertThat(decision).extracting(Decision::action, Decision::targetId)
+                .containsExactly(Decision.Action.SOLVE, "large");
+    }
+
+    @Test
+    void highScoreModePrefersTheSafestMissionWhenEveryRewardIsAlreadyDecent() {
+        var lateGamePlayer = new PlayerState("game", 3, 0, 0, 0, 0, 20);
+        var decision = engine.decide(lateGamePlayer, List.of(
+                ad("safer", 220, "Quite likely"), ad("riskier", 280, "Gamble")),
+                StrategyMode.HIGH_RISK, Map.of(), 0);
+
+        // Without this rule, "riskier" would win on expected value despite paying only 60 gold more;
+        // at this reward size the extra risk isn't worth it.
+        assertThat(decision.targetId()).isEqualTo("safer");
+    }
+
+    @Test
+    void highScoreModePrefersSafetyEvenWhenARiskierMissionPaysFarMore() {
+        var lateGamePlayer = new PlayerState("game", 3, 0, 0, 0, 0, 20);
+        var decision = engine.decide(lateGamePlayer, List.of(
+                ad("safer", 220, "Quite likely"), ad("riskier", 900, "Gamble")),
+                StrategyMode.HIGH_RISK, Map.of(), 0);
+
+        // There is no upper bound on the "decent reward" rule: once every mission already pays at
+        // least DECENT_REWARD_MIN, extra risk is not chased no matter how large the gap gets. Outsized
+        // rewards are only worth the risk once the board is entirely "Sure thing".
+        assertThat(decision.targetId()).isEqualTo("safer");
     }
 
     private static PlayerState player(int lives, int gold) {

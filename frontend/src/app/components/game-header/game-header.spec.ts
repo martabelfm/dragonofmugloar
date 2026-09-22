@@ -36,22 +36,28 @@ class FakeGameApiService {
   );
 }
 
+function stubViewport(isMobile: boolean): void {
+  vi.spyOn(window, 'matchMedia').mockImplementation(
+    (query: string) =>
+      ({
+        matches: isMobile,
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }) as MediaQueryList,
+  );
+}
+
 describe('GameHeaderComponent', () => {
   let api: FakeGameApiService;
 
-  beforeAll(() => {
-    // jsdom does not implement the native <dialog> methods; stub them so opening a
-    // confirmation dialog in a test doesn't throw.
-    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
-      this.setAttribute('open', '');
-    };
-    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
-      this.removeAttribute('open');
-    };
-  });
-
   beforeEach(() => {
     api = new FakeGameApiService();
+    stubViewport(false);
     TestBed.configureTestingModule({ providers: [{ provide: GameApiService, useValue: api }] });
   });
 
@@ -100,5 +106,61 @@ describe('GameHeaderComponent', () => {
     button.click();
 
     expect(emitted).toBe(false);
+  });
+
+  describe('score abbreviation', () => {
+    it('shows the exact score below the desktop threshold', async () => {
+      api.start.mockReturnValueOnce(of(fixture({ player: playerState({ score: 50_000_000 }) })));
+      const componentFixture = TestBed.createComponent(GameHeaderComponent);
+      await TestBed.inject(GameStore).start();
+      componentFixture.detectChanges();
+
+      const scoreElement = componentFixture.nativeElement.querySelector('.header-stats span:first-child strong');
+      expect(scoreElement?.textContent).toBe('50,000,000');
+      expect(componentFixture.nativeElement.querySelector('.header-stats button.score-value')).toBeNull();
+    });
+
+    it('abbreviates the score once it reaches the desktop threshold', async () => {
+      api.start.mockReturnValueOnce(of(fixture({ player: playerState({ score: 150_000_000 }) })));
+      const componentFixture = TestBed.createComponent(GameHeaderComponent);
+      await TestBed.inject(GameStore).start();
+      componentFixture.detectChanges();
+
+      const scoreButton = componentFixture.nativeElement.querySelector(
+        '.header-stats button.score-value',
+      ) as HTMLButtonElement;
+      expect(scoreButton.textContent).toBe('150.0M');
+    });
+
+    it('reveals and re-hides the exact score when the abbreviated value is clicked', async () => {
+      api.start.mockReturnValueOnce(of(fixture({ player: playerState({ score: 150_000_000 }) })));
+      const componentFixture = TestBed.createComponent(GameHeaderComponent);
+      await TestBed.inject(GameStore).start();
+      componentFixture.detectChanges();
+
+      const scoreButton = componentFixture.nativeElement.querySelector(
+        '.header-stats button.score-value',
+      ) as HTMLButtonElement;
+      scoreButton.click();
+      componentFixture.detectChanges();
+      expect(scoreButton.textContent).toBe('150,000,000');
+
+      scoreButton.click();
+      componentFixture.detectChanges();
+      expect(scoreButton.textContent).toBe('150.0M');
+    });
+
+    it('abbreviates sooner on a narrow (mobile) viewport', async () => {
+      stubViewport(true);
+      api.start.mockReturnValueOnce(of(fixture({ player: playerState({ score: 1_500_000 }) })));
+      const componentFixture = TestBed.createComponent(GameHeaderComponent);
+      await TestBed.inject(GameStore).start();
+      componentFixture.detectChanges();
+
+      const scoreButton = componentFixture.nativeElement.querySelector(
+        '.header-stats button.score-value',
+      ) as HTMLButtonElement;
+      expect(scoreButton.textContent).toBe('1.5M');
+    });
   });
 });

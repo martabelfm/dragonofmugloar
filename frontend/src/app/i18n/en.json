@@ -3,6 +3,8 @@
   "appTitle": "Mugloar Mission Control",
   "gameStatus": "Game status",
   "score": "Score",
+  "expandScore": "Show exact score",
+  "collapseScore": "Show abbreviated score",
   "gold": "Gold",
   "lives": "Lives",
   "level": "Level",

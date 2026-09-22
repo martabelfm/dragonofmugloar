@@ -121,12 +121,12 @@ footer {
   .page-shell {
     padding: 0 20px;
   }
-  .page-shell > main {
-    padding-left: 24px;
-  }
   .dashboard-layout,
   .content-grid {
     grid-template-columns: 1fr;
+  }
+  .dashboard-layout {
+    padding-left: 24px;
   }
 }
 @media (max-width: 580px) {
