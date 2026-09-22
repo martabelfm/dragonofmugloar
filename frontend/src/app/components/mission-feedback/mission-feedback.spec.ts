@@ -1,4 +1,4 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 import { GameApiService } from '../../game-api.service';
 import { Decision, GameView, PlayerState, TurnRecord } from '../../game.models';
@@ -58,16 +58,15 @@ describe('MissionFeedbackComponent', () => {
     TestBed.configureTestingModule({ providers: [{ provide: GameApiService, useValue: api }] });
   });
 
-  it('shows a toast for a newly solved turn and hides it again after the timeout', fakeAsync(() => {
+  it('shows a toast for a newly solved turn and hides it again after the timeout', async () => {
     const componentFixture = TestBed.createComponent(MissionFeedbackComponent);
     const store = TestBed.inject(GameStore);
     componentFixture.detectChanges();
-    tick();
+    await componentFixture.whenStable();
 
-    store.start();
-    tick();
+    await store.start();
     componentFixture.detectChanges();
-    tick();
+    await componentFixture.whenStable();
     expect(componentFixture.nativeElement.querySelector('.mission-feedback')).toBeNull();
 
     api.solve.mockReturnValueOnce(
@@ -78,31 +77,29 @@ describe('MissionFeedbackComponent', () => {
         }),
       ),
     );
-    store.solve('ad-1');
-    tick();
+    await store.solve('ad-1');
     componentFixture.detectChanges();
-    tick();
+    await componentFixture.whenStable();
 
     const toast = componentFixture.nativeElement.querySelector('.mission-feedback');
     expect(toast).not.toBeNull();
     expect(toast.classList.contains('success')).toBe(true);
     expect(componentFixture.nativeElement.textContent).toContain('Delivered the squirrels');
 
-    tick(1_400);
+    await new Promise((resolve) => setTimeout(resolve, 1_500));
     componentFixture.detectChanges();
     expect(componentFixture.nativeElement.querySelector('.mission-feedback')).toBeNull();
-  }));
+  }, 10_000);
 
-  it('ignores turns that are not a solved mission', fakeAsync(() => {
+  it('ignores turns that are not a solved mission', async () => {
     const componentFixture = TestBed.createComponent(MissionFeedbackComponent);
     const store = TestBed.inject(GameStore);
     componentFixture.detectChanges();
-    tick();
+    await componentFixture.whenStable();
 
-    store.start();
-    tick();
+    await store.start();
     componentFixture.detectChanges();
-    tick();
+    await componentFixture.whenStable();
 
     api.investigate.mockReturnValueOnce(
       of(
@@ -112,11 +109,10 @@ describe('MissionFeedbackComponent', () => {
         }),
       ),
     );
-    store.investigate();
-    tick();
+    await store.investigate();
     componentFixture.detectChanges();
-    tick();
+    await componentFixture.whenStable();
 
     expect(componentFixture.nativeElement.querySelector('.mission-feedback')).toBeNull();
-  }));
+  });
 });

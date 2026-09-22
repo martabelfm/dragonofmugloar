@@ -39,6 +39,17 @@ class FakeGameApiService {
 describe('GameHeaderComponent', () => {
   let api: FakeGameApiService;
 
+  beforeAll(() => {
+    // jsdom does not implement the native <dialog> methods; stub them so opening a
+    // confirmation dialog in a test doesn't throw.
+    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+      this.setAttribute('open', '');
+    };
+    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+      this.removeAttribute('open');
+    };
+  });
+
   beforeEach(() => {
     api = new FakeGameApiService();
     TestBed.configureTestingModule({ providers: [{ provide: GameApiService, useValue: api }] });
