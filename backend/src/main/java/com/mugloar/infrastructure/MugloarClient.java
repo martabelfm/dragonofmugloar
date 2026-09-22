@@ -1,15 +1,14 @@
 package com.mugloar.infrastructure;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.mugloar.application.GamePort;
 import com.mugloar.domain.*;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
 import java.net.http.HttpClient;
 import java.util.Arrays;
 import java.util.List;
@@ -22,16 +21,12 @@ public class MugloarClient implements GamePort {
         var httpClient = HttpClient.newBuilder().connectTimeout(properties.connectTimeout()).build();
         var requestFactory = new JdkClientHttpRequestFactory(httpClient);
         requestFactory.setReadTimeout(properties.readTimeout());
-        var mapper = new ObjectMapper()
-                .registerModule(new SimpleModule().addDeserializer(Advertisement.class, new AdvertisementDeserializer()));
+        var mapper = JsonMapper.builder()
+                .addModule(new SimpleModule().addDeserializer(Advertisement.class, new AdvertisementDeserializer()))
+                .build();
         this.client = builder.baseUrl(properties.baseUrl()).requestFactory(requestFactory)
-                .messageConverters(converters -> {
-                    // Spring 7 ships a Jackson 3-based converter alongside the legacy Jackson 2 one; RestClient
-                    // picks whichever comes first, so both must go before adding our Jackson 2 mapper back.
-                    converters.removeIf(converter -> converter instanceof MappingJackson2HttpMessageConverter
-                            || converter instanceof JacksonJsonHttpMessageConverter);
-                    converters.add(new MappingJackson2HttpMessageConverter(mapper));
-                })
+                .configureMessageConverters(converters ->
+                        converters.withJsonConverter(new JacksonJsonHttpMessageConverter(mapper)))
                 .build();
     }
 

@@ -1,9 +1,9 @@
 package com.mugloar.infrastructure;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.mugloar.domain.Advertisement;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -11,8 +11,9 @@ import java.util.Base64;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class AdvertisementDeserializerTest {
-    private final ObjectMapper mapper = new ObjectMapper()
-            .registerModule(new SimpleModule().addDeserializer(Advertisement.class, new AdvertisementDeserializer()));
+    private final JsonMapper mapper = JsonMapper.builder()
+            .addModule(new SimpleModule().addDeserializer(Advertisement.class, new AdvertisementDeserializer()))
+            .build();
 
     @Test
     void decodesBase64FieldsAndPreservesMetadata() throws Exception {

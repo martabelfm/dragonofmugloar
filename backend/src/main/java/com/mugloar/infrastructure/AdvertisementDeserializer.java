@@ -1,14 +1,12 @@
 package com.mugloar.infrastructure;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mugloar.domain.Advertisement;
 import com.mugloar.domain.Probability;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
@@ -17,15 +15,14 @@ import java.util.Base64;
  * "encrypted" flag whose JSON type varies (boolean, number, or string). Decoding happens here, at
  * the JSON boundary, so the rest of the application only ever sees plain Advertisement values.
  */
-class AdvertisementDeserializer extends JsonDeserializer<Advertisement> {
+class AdvertisementDeserializer extends ValueDeserializer<Advertisement> {
     @Override
-    public Advertisement deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-        var mapper = (ObjectMapper) parser.getCodec();
-        JsonNode node = mapper.readTree(parser);
+    public Advertisement deserialize(JsonParser parser, DeserializationContext context) {
+        JsonNode node = context.readTree(parser);
 
         var encryptedNode = node.get("encrypted");
         var encrypted = encryptedNode == null || encryptedNode.isNull()
-                ? null : mapper.treeToValue(encryptedNode, Object.class);
+                ? null : context.readTreeAsValue(encryptedNode, Object.class);
 
         var raw = new Advertisement(text(node, "adId"), text(node, "message"), node.path("reward").asInt(),
                 node.path("expiresIn").asInt(), encrypted, text(node, "probability"));
@@ -88,6 +85,6 @@ class AdvertisementDeserializer extends JsonDeserializer<Advertisement> {
 
     private static String text(JsonNode node, String field) {
         var value = node.get(field);
-        return value == null || value.isNull() ? null : value.asText();
+        return value == null || value.isNull() ? null : value.asString();
     }
 }
