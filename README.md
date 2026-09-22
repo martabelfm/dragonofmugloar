@@ -1,107 +1,195 @@
 # Mugloar Mission Control
 
-A full-stack client for the [Dragons of Mugloar](https://dragonsofmugloar.com/) engineering assignment. It supports deliberate manual play and optional server-led guidance, while keeping all turn-changing calls behind a single backend API.
+A full-stack client for the [Dragons of Mugloar](https://dragonsofmugloar.com/) engineering assignment. The application supports manual play, explainable strategy recommendations, and optional server-controlled automation through one consistent game interface.
 
-## Tech stack
+## Contents
 
-**Backend** — `backend/`
-- Java 25, built with Maven (via `./mvnw`)
-- Spring Boot 4.1.1 (Web, Validation, Actuator)
-- springdoc-openapi 3.0.1 for the OpenAPI/Swagger UI
-- Caffeine for caching
-- JUnit 5 + AssertJ (`spring-boot-starter-test`) and WireMock for tests
-
-**Frontend** — `frontend/`
-- Angular 22 (standalone components, native control flow)
-- NgRx Signal Store (`@ngrx/signals`) for state management
-- RxJS 7 and TypeScript 6.0
-- Vitest, via Angular's `@angular/build:unit-test` builder, for unit tests
-
-**Tooling**
-- Docker / Docker Compose for local orchestration (see [Run locally](#run-locally))
-
-## Requirements coverage
-
-| Assignment requirement | Implementation | Verification |
-|---|---|---|
-| Start a game; view and solve ads | Angular game board backed by `POST /api/games` and solve endpoints | `GameServiceTest` covers the end-to-end application flow with a fake upstream port. |
-| Buy shop items; show score, gold, lives | Compact shop, header status panel, and purchase endpoint | Purchase affordability and purchase counts are unit tested. |
-| State management | NgRx Signal Store owns the game, request state, errors, and automation state | Frontend tests and production build. |
-| Reach 1,000+ points | `DecisionEngine` produces one explainable action; `auto/step` runs that same decision used by guidance | `automatedStepsReachTheRequiredScoreAndRecordEveryAction` proves a 1,000-point run against a deterministic game port. |
-| Error handling and validation | Bean validation for route IDs and request bodies; RFC 9457 problem responses; UI error state | Service tests cover invalid purchases; controller validation is enforced at the HTTP boundary. |
-| Responsive and cross-browser UI | CSS Grid/Flex layouts, semantic controls, native dialog, and a mobile breakpoint | Test in current Chrome, Firefox, and Safari/Edge before submission; see [manual QA](#manual-qa). |
-| Unit tests | JUnit/AssertJ backend tests and Vitest Angular tests | Run the commands below. |
+1. [Architecture](#architecture)
+2. [Key design decisions](#key-design-decisions)
+3. [Technology](#technology)
+4. [Run locally](#run-locally)
+5. [Local development](#local-development)
+6. [Requirements coverage](#requirements-coverage)
+7. [API](#api)
+8. [Verification](#verification)
+9. [Project conventions](#project-conventions)
 
 ## Architecture
 
 ```text
-Angular UI + NgRx Signal Store
-             │
-             ▼
-      Spring Boot REST API
-       ├─ GameService: validation, session and turn history
-       ├─ DecisionEngine: one server-side recommendation policy
-       └─ MugloarClient: normalized external API boundary
-             │
-             ▼
-      Dragons of Mugloar API
+Browser
+  Angular UI
+  NgRx Signal Store
+       |
+       | same-origin /api requests
+       v
+Frontend container
+  nginx static hosting and reverse proxy
+       |
+       v
+Spring Boot API
+  web             HTTP validation and problem responses
+  application     game sessions, use cases, history, automation
+  strategy        Conservative and High-risk decision policies
+  domain          immutable game records and strategy values
+  infrastructure  external API client and response normalization
+       |
+       v
+Dragons of Mugloar API
 ```
 
-The browser does not call the game API directly. This prevents CORS exposure, normalizes inconsistent upstream response shapes, and makes the decision policy independently testable. Manual guidance and automation share exactly the same server-side decision, avoiding duplicated rules in TypeScript.
+The browser communicates only with this application's `/api` endpoints. In Docker, nginx forwards those requests to the backend container; during frontend development, the Angular development proxy performs the same role. The browser never needs direct access to the external game API.
 
-Sessions are intentionally in memory: the live game API remains the game authority and no database is needed for the assignment. A game URL (`/games/{gameId}`) restores its local session while the backend remains running; a backend restart clears sessions.
+The backend uses a layered, ports-and-adapters-oriented structure:
+
+- `web` accepts and validates HTTP input.
+- `application` coordinates sessions and game actions through `GamePort`.
+- `strategy` converts the current game state into one explainable next action.
+- `domain` contains framework-independent records and enums.
+- `infrastructure` implements the external Mugloar API boundary.
+
+Recommendations and automation share the same `DecisionEngine`. The UI renders the current backend recommendation, while `/auto/step` executes that exact recommendation. This prevents manual guidance and automated play from developing separate rules.
+
+## Key design decisions
+
+- **Backend-owned strategy state.** Strategy mode is stored with the game session as `OFF`, `CONSERVATIVE`, or `HIGH_RISK`, so refreshing a game route preserves the selected mode.
+- **Single upstream boundary.** `MugloarClient` contains transport concerns, Jackson decoding, encrypted advertisement handling, and upstream error translation.
+- **Deterministic tests.** Automated tests use fake game ports and local HTTP stubs rather than the live game service.
+- **No unsafe retries.** Turn-changing requests are not retried automatically because the upstream API provides no idempotency key; a timed-out request may already have consumed a turn.
+- **In-memory sessions.** No database is needed for the assignment. `/games/{gameId}` restores a session while the backend is running; restarting the backend clears local sessions.
+- **Translation-ready UI copy.** Static frontend text is kept in `frontend/src/app/i18n/en.json`. Dynamic mission, shop, and recommendation text remains owned by the game API.
+
+## Technology
+
+| Area | Technology |
+|---|---|
+| Frontend | Angular 22, TypeScript 6, RxJS 7 |
+| State | NgRx Signal Store |
+| Backend | Java 25, Spring Boot 4.1 |
+| API documentation | springdoc-openapi / Swagger UI |
+| JSON | Jackson 3 with a custom advertisement deserializer |
+| Backend tests | JUnit 5, AssertJ, Spring Boot Test, WireMock |
+| Frontend tests | Vitest through Angular's unit-test builder |
+| Packaging | Docker Compose, multi-stage Docker builds, nginx |
 
 ## Run locally
 
-Prerequisites: Docker Desktop, or JDK 25 and Node.js 24/26.
+### Prerequisite
+
+- Docker Desktop
+
+No host installation of Java, Maven, Node.js, or npm is required. The multi-stage Docker builds provide Maven and JDK 25 for the backend build, Node.js for the frontend build, Java for the backend runtime, and nginx for frontend hosting.
+
+From the repository root:
 
 ```bash
 docker compose up --build
 ```
 
-Open `http://localhost:4200`. The API is available at `http://localhost:8081`; OpenAPI UI is at `http://localhost:8081/swagger-ui.html`.
+When both services are healthy, open:
 
-For development, run `./mvnw spring-boot:run` in `backend`, then `npm ci && npm start` in `frontend`. The Angular proxy expects the backend on port 8080.
+| Service | URL |
+|---|---|
+| Application | <http://localhost:4200> |
+| Backend API | <http://localhost:8081> |
+| Swagger UI | <http://localhost:8081/swagger-ui.html> |
+| Health check | <http://localhost:8081/actuator/health> |
 
-## Test and build
+Stop the application with `Ctrl+C`. Containers can then be removed with:
+
+```bash
+docker compose down
+```
+
+## Local development
+
+This section is optional and is only relevant when running the services directly on the host instead of through Docker Compose.
+
+Host-based development requires:
+
+- JDK 25; Maven is supplied by the included Maven Wrapper
+- Node.js 24 or 26 with npm
+
+Start the backend on port 8080:
+
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+In another terminal, start the Angular development server:
+
+```bash
+cd frontend
+npm ci
+npm start
+```
+
+The Angular development proxy forwards `/api` requests to `http://localhost:8080`.
+
+## Requirements coverage
+
+| Assignment requirement | Implementation | Verification |
+|---|---|---|
+| Start a game; view and solve advertisements | Angular game board backed by the Spring Boot game API | `GameServiceTest` covers the application flow through a deterministic fake port. |
+| Buy shop items; display score, gold, lives, and level | Responsive status header and shop controls | Service tests cover affordability and purchase tracking. |
+| Frontend state management | NgRx Signal Store owns game, loading, error, and automation state | Frontend unit tests and production build. |
+| Reach at least 1,000 points | Conservative strategy produces one explainable decision per turn | `automatedStepsReachTheRequiredScoreAndRecordEveryAction` verifies a complete 1,000-point run. |
+| Error handling and validation | Bean Validation, RFC 9457 problem responses, and visible UI errors | Controller and service tests cover invalid input and invalid actions. |
+| Responsive interface | Desktop and mobile layouts, keyboard-accessible controls, and native dialogs | Manual smoke checklist below. |
+| Unit tests | Focused backend strategy/service tests and Angular component/store tests | Commands in [Verification](#verification). |
+
+## API
+
+All application endpoints use the `/api/games` base path.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/games` | Start and hydrate a game |
+| `GET` | `/api/games/{gameId}` | Read a locally known game session |
+| `POST` | `/api/games/{gameId}/refresh` | Refresh advertisements and shop data |
+| `POST` | `/api/games/{gameId}/ads/{adId}/solve` | Solve an advertisement |
+| `POST` | `/api/games/{gameId}/shop/{itemId}/purchase` | Purchase a shop item |
+| `POST` | `/api/games/{gameId}/reputation` | Investigate reputation |
+| `PUT` | `/api/games/{gameId}/strategy-mode` | Select `OFF`, `CONSERVATIVE`, or `HIGH_RISK` |
+| `POST` | `/api/games/{gameId}/auto/step` | Execute the current backend recommendation |
+
+Strategy behavior and its UI integration are documented in [STRATEGY.md](STRATEGY.md).
+
+## Verification
+
+The following commands run tests directly on the host and therefore use the optional local development toolchain described above. They are not required to start the application through Docker Desktop.
+
+Backend:
 
 ```bash
 cd backend
 ./mvnw verify
+```
 
-cd ../frontend
+Frontend:
+
+```bash
+cd frontend
+npm ci
 npm test
 npm run build
 ```
 
-Normal tests never call the live game API, so they remain deterministic. The live API is intentionally not retried for turn-changing requests because it has no idempotency key: a timed-out response may already have consumed a turn.
+The automated tests do not call the live Mugloar service.
 
-## API surface
+### Manual smoke test
 
-| Method | Path | Purpose |
-|---|---|---|
-| POST | `/api/games` | Start and hydrate a game |
-| GET | `/api/games/{gameId}` | Read the locally known game view |
-| POST | `/api/games/{gameId}/refresh` | Refresh advertisements |
-| POST | `/api/games/{gameId}/ads/{adId}/solve` | Solve an advertisement |
-| POST | `/api/games/{gameId}/shop/{itemId}/purchase` | Purchase an item |
-| POST | `/api/games/{gameId}/reputation` | Investigate reputation |
-| PUT | `/api/games/{gameId}/strategy-mode` | Select Conservative or High-risk guidance |
-| POST | `/api/games/{gameId}/auto/step` | Execute one recommended action |
-
-## Manual QA
-
-Before handing in, use this short smoke checklist in Chrome, Firefox, and one WebKit-based browser (Safari or Edge):
-
-- Start a game, refresh `/games/{gameId}`, and confirm the game remains available.
-- Solve an ad, buy an affordable item, and check score/gold/lives update together.
-- Try an unavailable ad and an unaffordable item; confirm the visible error is clear and the UI stays usable.
-- At desktop and narrow mobile widths, confirm no controls overlap and keyboard focus reaches every action.
-- Turn guidance on/off and run/stop an automated step sequence.
+- Start a game and refresh `/games/{gameId}`; verify that the session and selected strategy remain available.
+- Solve a mission and buy an affordable item; verify score, gold, lives, and level update together.
+- Attempt an unavailable mission and an unaffordable purchase; verify a readable error without losing the current screen.
+- Select Conservative and High risk; verify recommendations update and automation can start and stop.
+- Check desktop and narrow mobile layouts for overlapping controls, clipped content, and keyboard accessibility.
 
 ## Project conventions
 
-- `domain` holds immutable game records; `application` holds use cases and policy; `web` is the HTTP adapter.
-- Controllers validate untrusted input; `GameService` validates current-game rules before an upstream call.
-- `DecisionEngine` is the sole place to alter recommendation policy. Keep its behavior covered by focused tests when tuning strategy.
-- Keep upstream API quirks isolated in `MugloarClient` rather than spreading parsing logic across the application.
+- Keep business decisions in `DecisionEngine` and the strategy classes, with focused tests for every policy change.
+- Keep upstream response quirks and decoding inside `MugloarClient` and `AdvertisementDeserializer`.
+- Validate untrusted HTTP input in the web layer and current-game rules in the application layer.
+- Treat generated directories (`backend/target`, `frontend/dist`, and `frontend/node_modules`) as build output.
+- Preserve existing action history so completed manual and automated runs remain inspectable.
