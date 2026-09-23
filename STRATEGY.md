@@ -2,6 +2,8 @@
 
 This file documents the current policy boundary, not a promise of a particular live score. The remote game has hidden and changing mechanics, so score experiments should not be treated as deterministic acceptance tests.
 
+The observations and hypotheses behind these policies are documented in [GAME_MECHANICS.md](GAME_MECHANICS.md).
+
 ## Single source of truth
 
 `backend/src/main/java/com/mugloar/application/DecisionEngine.java` is the only place that chooses a recommended action. The Angular client renders its recommendation and `POST /api/games/{gameId}/auto/step` executes that same action. This prevents manual guidance and automation from drifting apart.
@@ -47,6 +49,11 @@ High-risk mode is a deliberately isolated experimental policy. It evaluates acti
    at least 200 gold (no upper bound), the safest one is taken outright since the extra reward elsewhere isn't
    worth chasing; otherwise the mission with the highest calculated utility is chosen.
 6. If only terminal-risk missions remain, choose the safest of them as a last resort. If the board is empty, investigate.
+
+Before applying the mission rules, High Risk filters out descriptions containing `steal` whenever at
+least one non-steal alternative is rated `Gamble` or safer. A steal mission becomes eligible only when
+every non-steal alternative is in the red `Risky`-or-worse tier. This uses the same red-tier boundary as
+the UI and limits State-reputation damage without making the strategy stop when the board deteriorates.
 
 Mission utility changes with the run. Before turn 15, safety and normalized reward each receive equal weight. From turn 15 onward, safety receives more weight and reward less; missions below 300 reward also use the lower difficulty weight. Equal utility is resolved in favor of the mission expiring sooner.
 

@@ -7,6 +7,7 @@ import com.mugloar.domain.Probability;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -36,6 +37,8 @@ import java.util.Map;
  *       {@link #DECENT_REWARD_MIN}, the safest one is taken outright, however high the rewards go
  *       &mdash; the extra a riskier pick offers isn't worth chasing once the payout is already decent.
  *       Otherwise the mission with the highest calculated utility is chosen.</li>
+ *   <li>Missions containing "steal" are excluded while any non-steal mission is rated Gamble or
+ *       safer. They become eligible only when every alternative is in the red Risky-or-worse tier.</li>
  *   <li>If the board has no missions at all, refresh it instead.</li>
  * </ol>
  *
@@ -67,6 +70,8 @@ public class HighRiskStrategy implements GameStrategy {
     private static final int EARLY_GAME_TURN_LIMIT = 15;
     /** Missions at or above this safety rank are the "green" tier the early game sticks to. */
     private static final int GREEN_MISSION_MINIMUM_RANK = Probability.WALK_IN_THE_PARK.safetyRank();
+    /** Matches the UI's boundary between the amber and red risk tiers. */
+    private static final int RED_MISSION_MAXIMUM_RANK = Probability.RISKY.safetyRank();
     /**
      * Once every available mission's reward is at least this much, the safest one is taken outright
      * instead of chasing expected value, however high the rewards go &mdash; the outsized rewards worth
@@ -87,15 +92,16 @@ public class HighRiskStrategy implements GameStrategy {
     @Override
     public Decision decide(PlayerState player, List<Advertisement> ads, Map<String, Integer> purchasedItems,
                             int consecutiveBoardRefreshes) {
+        var reputationSafeAds = avoidStealUnlessAlternativesAreRed(ads);
         if (needsHealing(player)) {
             return new Decision(Decision.Action.HEAL, "hpot", "Healing potion",
                     "Restore lives above the critical buffer before spending gold on upgrades.", HEAL_UTILITY);
         }
-        if (isBoardEntirelySureThing(ads)) {
-            var mission = MissionRanking.safest(ads);
+        if (isBoardEntirelySureThing(reputationSafeAds)) {
+            var mission = MissionRanking.safest(reputationSafeAds);
             return solveDecision(mission,
                     "Every mission is a sure thing; keep cashing in instead of pausing to shop.",
-                    highScoreUtility(player.turn(), mission, ads));
+                    highScoreUtility(player.turn(), mission, reputationSafeAds));
         }
         if (shouldInvestInStarterUpgrade(player, purchasedItems)) {
             return purchaseDecision(leastPurchased(STARTER_UPGRADES, purchasedItems), "Starter equipment investment",
@@ -107,7 +113,7 @@ public class HighRiskStrategy implements GameStrategy {
                     "Buy the least-purchased premium upgrade before risking a life; retain 50 gold for healing.",
                     PREMIUM_UPGRADE_UTILITY);
         }
-        return chooseMission(player, ads);
+        return chooseMission(player, reputationSafeAds);
     }
 
     private boolean needsHealing(PlayerState player) {
@@ -123,6 +129,18 @@ public class HighRiskStrategy implements GameStrategy {
 
     private boolean canAffordPremiumUpgrade(PlayerState player) {
         return player.gold() >= PREMIUM_UPGRADE_GOLD_THRESHOLD;
+    }
+
+    private List<Advertisement> avoidStealUnlessAlternativesAreRed(List<Advertisement> ads) {
+        var hasNonStealAlternativeOutsideRedTier = ads.stream()
+                .filter(ad -> !isStealMission(ad))
+                .anyMatch(ad -> Probability.fromLabel(ad.probability()).safetyRank() > RED_MISSION_MAXIMUM_RANK);
+        if (!hasNonStealAlternativeOutsideRedTier) return ads;
+        return ads.stream().filter(ad -> !isStealMission(ad)).toList();
+    }
+
+    private boolean isStealMission(Advertisement ad) {
+        return ad.message() != null && ad.message().toLowerCase(Locale.ROOT).contains("steal");
     }
 
     /** True once the board has at least one mission and every one of them is rated "Sure thing". */

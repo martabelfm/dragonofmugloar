@@ -6,13 +6,14 @@ A full-stack client for the [Dragons of Mugloar](https://dragonsofmugloar.com/) 
 
 1. [Architecture](#architecture)
 2. [Key design decisions](#key-design-decisions)
-3. [Technology](#technology)
-4. [Run locally](#run-locally)
-5. [Local development](#local-development)
-6. [Requirements coverage](#requirements-coverage)
-7. [API](#api)
-8. [Verification](#verification)
-9. [Project conventions](#project-conventions)
+3. [Game mechanics](#game-mechanics)
+4. [Technology](#technology)
+5. [Run locally](#run-locally)
+6. [Local development](#local-development)
+7. [Requirements coverage](#requirements-coverage)
+8. [API](#api)
+9. [Verification](#verification)
+10. [Project conventions](#project-conventions)
 
 ## Architecture
 
@@ -58,6 +59,10 @@ Recommendations and automation share the same `DecisionEngine`. The UI renders t
 - **No unsafe retries.** Turn-changing requests are not retried automatically because the upstream API provides no idempotency key; a timed-out request may already have consumed a turn.
 - **In-memory sessions.** No database is needed for the assignment. `/games/{gameId}` restores a session while the backend is running; restarting the backend clears local sessions.
 - **Translation-ready UI copy.** Static frontend text is kept in `frontend/src/app/i18n/en.json`. Dynamic mission, shop, and recommendation text remains owned by the game API.
+
+## Game mechanics
+
+Observed mechanics, action costs, the turn-versus-level difficulty model, and open questions are documented in [GAME_MECHANICS.md](GAME_MECHANICS.md). Strategy rules are documented separately in [STRATEGY.md](STRATEGY.md).
 
 ## Technology
 

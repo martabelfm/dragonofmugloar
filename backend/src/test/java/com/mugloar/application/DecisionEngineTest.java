@@ -118,6 +118,26 @@ class DecisionEngineTest {
     }
 
     @Test
+    void highScoreModeAvoidsStealWhenANonRedAlternativeExists() {
+        var decision = engine.decide(player(3, 0), List.of(
+                ad("steal", "Steal a shipment from the state", 900, "Sure thing"),
+                ad("neutral", "Help a farmer repair a wagon", 20, "Gamble")),
+                StrategyMode.HIGH_RISK, Map.of(), 0);
+
+        assertThat(decision.targetId()).isEqualTo("neutral");
+    }
+
+    @Test
+    void highScoreModeAllowsStealWhenEveryAlternativeIsRed() {
+        var decision = engine.decide(player(3, 0), List.of(
+                ad("steal", "Steal a shipment from the state", 100, "Sure thing"),
+                ad("red", "Help a farmer repair a wagon", 20, "Risky")),
+                StrategyMode.HIGH_RISK, Map.of(), 0);
+
+        assertThat(decision.targetId()).isEqualTo("steal");
+    }
+
+    @Test
     void highScoreModeKeepsSolvingInsteadOfShoppingWhileEveryMissionIsASureThing() {
         var purchases = Map.of("cs", 2, "gas", 2); // starter investment already complete
         var decision = engine.decide(player(3, 400), List.of(
@@ -161,5 +181,9 @@ class DecisionEngineTest {
 
     private static Advertisement ad(String id, int reward, String probability) {
         return new Advertisement(id, id, reward, 5, null, probability);
+    }
+
+    private static Advertisement ad(String id, String message, int reward, String probability) {
+        return new Advertisement(id, message, reward, 5, null, probability);
     }
 }
